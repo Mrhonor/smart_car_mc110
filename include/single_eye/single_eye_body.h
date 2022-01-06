@@ -2,7 +2,10 @@
 #define __SINGLE_EYE_MAIN__
 
 #include "ros/ros.h"
+#include <image_transport/image_transport.h>
+
 #include <opencv2/opencv.hpp>
+
 #include <string.h>
 #include <vector>
 
@@ -10,7 +13,12 @@
 class single_eye_body
 {
 private:
+    image_transport::ImageTransport* imgTrans;
+    image_transport::Publisher imgPub;
+    ros::Publisher ctanSlopPub;
+
     volatile unsigned char ctanSlop;    //add by andy 20200415
+
 
     //基于单目摄像头进行视觉检测车道线线程
     void laneDectionThreadHandler();

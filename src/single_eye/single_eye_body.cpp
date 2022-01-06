@@ -20,6 +20,7 @@
 
 #include <pthread.h>
 #include <stdbool.h>
+#include <thread>
 
 //#include <jpeglib.h>
 
@@ -38,9 +39,12 @@
 #include "opencv2/opencv_modules.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 
-#include <math.h>
 #include <iomanip>
 
+//ros
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
+#include <std_msgs/UInt8.h>
 
 
 #define RESIZE_WIDTH  320
@@ -78,17 +82,27 @@ typedef float               float32;// 32 bits floating point
 #define RIGHT_SIGN_IMAGE "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/right.png"
 
 
+using namespace cv;
+using namespace std;
+using namespace ros;
+
 single_eye_body::single_eye_body(ros::NodeHandle &n)
 {
+	imgTrans = new image_transport::ImageTransport(n);
+	imgPub = imgTrans->advertise("/smart_car_mc110/single_eye/img", 10);
+	ctanSlopPub = n.advertise<std_msgs::UInt8>("/smart_car_mc110/single_eye/ctanSlop", 10);
+
+	thread detechThread(&single_eye_body::laneDectionThreadHandler, this);
+	detechThread.detach();
 }
 
 single_eye_body::~single_eye_body()
 {
+	delete imgTrans;
 }
 
 
-using namespace cv;
-using namespace std;
+
 
 
 
@@ -755,15 +769,19 @@ void single_eye_body::draw_locations(Mat & img, vector< Rect > &locations, const
 
 void single_eye_body::laneDectionThreadHandler()
 {
- 	Mat mFrame ;
+ 	Mat mFrame(Size(RESIZE_WIDTH, RESIZE_HEIGHT), CV_8UC3);  // img waited to process
+	Mat originFrame; // to save origin img
+	cv_bridge::CvImage cvImg;
+	ctanSlop = 0;
 	static bool quit = false;
- 	int framenum = 0;
 
- 	CvCapture* capture = cvCreateCameraCapture(1); //如果是笔记本，0打开的是自带的摄像头，1 打开外接的相机
-	IplImage* frame;
-    IplImage *imgOrigin;
-    int width  = RESIZE_WIDTH;
-    int height = RESIZE_HEIGHT;
+ 	VideoCapture capture; 
+	capture.open(0); //如果是笔记本，0打开的是自带的摄像头，1 打开外接的相机
+	if(!capture.isOpened()){
+		ROS_WARN("fail to open camera!");
+	}
+
+
 
     struct timeval tStart,tEnd;    //变量保存程序开始时间，和结束时间
     float timeElapse;              //变量保存程序耗费时间
@@ -772,23 +790,30 @@ void single_eye_body::laneDectionThreadHandler()
 	{
 //        gettimeofday(&tStart,NULL);  //记录程序开始时间
         /**********************************************************************/
- 		frame = cvQueryFrame(capture);
-		if (!frame) {
-			break;
-		}
+		capture.read(originFrame);
 
-		framenum ++;
-		if(framenum == 1) {
-			imgOrigin          = cvCreateImage(cvSize(RESIZE_WIDTH, RESIZE_HEIGHT), IPL_DEPTH_8U, 3);	// BGR
-			imgOrigin->origin  = 0;
- 		}
+		cvImg.header.stamp = ros::Time::now();
+		cvImg.encoding = "bgr8";
+		cvImg.image = originFrame;
 
-		cvResize(frame, imgOrigin, CV_INTER_LINEAR);
+		sensor_msgs::Image imgMsg;
+		cvImg.toImageMsg(imgMsg);
+		imgPub.publish(imgMsg);
 
-        mFrame = cvarrToMat(imgOrigin);
+
+		
+
+		resize(originFrame, mFrame, Size(RESIZE_WIDTH, RESIZE_HEIGHT), CV_INTER_LINEAR);
+
+
          /***********************************************************************/
 
-        cvDetectLane(mFrame);
+		// //  Lane-detected func
+        //cvDetectLane(mFrame);
+		ctanSlop++;
+		std_msgs::UInt8 slopMsg;
+		slopMsg.data = ctanSlop;
+		ctanSlopPub.publish(slopMsg);
 
 		int key = cvWaitKey(10);
 		if(key == 27) {
