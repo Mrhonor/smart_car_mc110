@@ -16,10 +16,14 @@ public:
     smart_car_controller(ros::NodeHandle &);
     ~smart_car_controller();
     
+
 private:
+
     smart_car_communicator comUart;
+    void controllerThreadHandle();
 
 };
+
 
 
 

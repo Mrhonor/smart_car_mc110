@@ -1,5 +1,5 @@
 #include "smart_car_controller.h"
-
+#include "smart_car_public.h"
 
 
 
@@ -14,3 +14,13 @@ smart_car_controller::~smart_car_controller(){
 
 }
 
+void smart_car_controller::controllerThreadHandle(){
+    SCommandDataStru data;
+    data.Init();
+    while (ros::ok())
+    {
+        comUart.uartTxHandle(data);
+        ros::Duration(0.1).sleep();
+    }
+    
+}
