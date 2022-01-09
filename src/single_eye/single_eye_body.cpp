@@ -77,9 +77,9 @@ typedef float               float32;// 32 bits floating point
 #define CASCADE4_FILE_NAME "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/left-sign.xml"
 #define CASCADE5_FILE_NAME "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/right-sign.xml"
 
-#define CAR_IMAGE "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/car.png"
-#define LEFT_SIGN_IMAGE "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/left.png"
-#define RIGHT_SIGN_IMAGE "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/right.png"
+#define CAR_IMAGE "/home/robot/robot_ws/src/smart_car_mc110/car.png"
+#define LEFT_SIGN_IMAGE "/home/robot/robot_ws/src/smart_car_mc110/left.png"
+#define RIGHT_SIGN_IMAGE "/home/robot/robot_ws/src/smart_car_mc110/right.png"
 
 
 using namespace cv;
@@ -776,7 +776,7 @@ void single_eye_body::laneDectionThreadHandler()
 	static bool quit = false;
 
  	VideoCapture capture; 
-	capture.open(0); //如果是笔记本，0打开的是自带的摄像头，1 打开外接的相机
+	capture.open("/dev/video10"); //如果是笔记本，0打开的是自带的摄像头，1 打开外接的相机
 	if(!capture.isOpened()){
 		ROS_WARN("fail to open camera!");
 	}
