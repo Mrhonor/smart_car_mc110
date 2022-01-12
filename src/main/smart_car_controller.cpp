@@ -7,11 +7,11 @@ using namespace std;
 
 smart_car_controller::smart_car_controller(ros::NodeHandle &n){
     ROS_INFO("controller init");
-    comUart = smart_car_communicator();
+    comUart = new smart_car_communicator();
 }
 
 smart_car_controller::~smart_car_controller(){
-
+    delete comUart;
 }
 
 void smart_car_controller::controllerThreadHandle(){
@@ -19,7 +19,7 @@ void smart_car_controller::controllerThreadHandle(){
     data.Init();
     while (ros::ok())
     {
-        comUart.uartTxHandle(data);
+        comUart->uartTxHandle(data);
         ros::Duration(0.1).sleep();
     }
     

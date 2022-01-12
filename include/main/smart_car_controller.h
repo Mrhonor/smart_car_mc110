@@ -19,7 +19,7 @@ public:
 
 private:
 
-    smart_car_communicator comUart;
+    smart_car_communicator* comUart;
     void controllerThreadHandle();
 
 };

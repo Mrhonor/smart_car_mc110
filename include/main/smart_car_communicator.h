@@ -10,9 +10,9 @@ class smart_car_communicator
 {
 private:
     // 接收缓存区
-    smart_car_loop_queue uartToMainQ;
+    smart_car_loop_queue* uartToMainQ;
     // 发送缓冲区
-    smart_car_loop_queue mainToUartQ;
+    smart_car_loop_queue* mainToUartQ;
 
     smart_car_protocol* uartProtocol;
 

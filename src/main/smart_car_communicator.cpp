@@ -22,8 +22,8 @@ inline int gettimeofday(struct timeval *tv, void * /*tzv*/) {
 
 smart_car_communicator::smart_car_communicator(){
 	// 初始化资源
-    uartToMainQ = smart_car_loop_queue(true);
-    mainToUartQ = smart_car_loop_queue(true);
+    uartToMainQ = new smart_car_loop_queue(true);
+    mainToUartQ = new smart_car_loop_queue(true);
 	uartProtocol = new smart_car_protocol();
 
 	// 开启串口通信线程
@@ -33,6 +33,8 @@ smart_car_communicator::smart_car_communicator(){
 
 smart_car_communicator::~smart_car_communicator()
 {
+	delete uartToMainQ;
+	delete mainToUartQ;
 	delete uartProtocol;
 }
 
@@ -47,13 +49,13 @@ void smart_car_communicator::uartThreadHandler()//串口任务
 	linkP->rbCreatConnect(NULL);//创建连接flagchen 此处未作返回值判断
 	while(1)
 	{
-        if(mainToUartQ.getCurrentLenInBytes())//有未发送数据
+        if(mainToUartQ->getCurrentLenInBytes())//有未发送数据
         {
             memset(interBuf,0,sizeof(interBuf));
-            tmpCount = mainToUartQ.getCurrentLenInBytes();
+            tmpCount = mainToUartQ->getCurrentLenInBytes();
             tmpCount1 = sizeof(interBuf);
             count = tmpCount > tmpCount1 ? tmpCount1 : tmpCount; 
-            mainToUartQ.outQueueToBuffer(interBuf, count);
+            mainToUartQ->outQueueToBuffer(interBuf, count);
 
             linkP->rbSendData(interBuf , count);//flagchen 因为是非阻塞方式，此处有可能没发送或只发送了一部分，需要做处理
         }
@@ -63,7 +65,7 @@ void smart_car_communicator::uartThreadHandler()//串口任务
         count = linkP->rbRecvData(buf,1024);//接收处理
         if(count > 0)
         {
-            uartToMainQ.inQueue(buf,count);
+            uartToMainQ->inQueue(buf,count);
             memset(buf,0,sizeof(buf));
         }
 	}
@@ -78,7 +80,7 @@ void smart_car_communicator::uartTxHandle(SCommandDataStru & originData)
 	int sendCount = 0;
 	uartProtocol->setCommandDataStru(originData);//设置原始数据
 	sendP = uartProtocol->protocolTX(sendCount);//组帧
-	mainToUartQ.inQueue(sendP,sendCount);//入队
+	mainToUartQ->inQueue(sendP,sendCount);//入队
 }
 
 //串口数据处理，RecvData为收到的数据
@@ -90,7 +92,7 @@ bool smart_car_communicator::uartRxHandle(SRealDataStru & RecvData)
 
 	struct timeval tv_begin;
 	 
-	if((currentQueueCount = uartToMainQ.getCurrentLenInBytes()) >= UART_AVERAGE_ONEFRAME_LEN)
+	if((currentQueueCount = uartToMainQ->getCurrentLenInBytes()) >= UART_AVERAGE_ONEFRAME_LEN)
 	{
 		gettimeofday(&tv_begin, NULL);
 		
@@ -101,13 +103,13 @@ bool smart_car_communicator::uartRxHandle(SRealDataStru & RecvData)
 		int tmpCount = currentQueueCount > 512 ? 512 : currentQueueCount;
 		char  buf[tmpCount];
 		memset(buf,0,tmpCount);
-		uartToMainQ.getDataWithoutOutQueue(buf,tmpCount);
+		uartToMainQ->getDataWithoutOutQueue(buf,tmpCount);
 		//串口数据解析
 		outQueueCount = uartProtocol->protocolRX(buf,tmpCount,isSuccess);
 		//解析的字节数
 		if(outQueueCount > 0)
 		{
-			uartToMainQ.outQueueDirect(outQueueCount);//从队列中出队
+			uartToMainQ->outQueueDirect(outQueueCount);//从队列中出队
 		}
 		if(isSuccess)//成功解析出一帧数据
 		{
