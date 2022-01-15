@@ -77,9 +77,9 @@ typedef float               float32;// 32 bits floating point
 #define CASCADE4_FILE_NAME "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/left-sign.xml"
 #define CASCADE5_FILE_NAME "/data/workspace/laneDetects/test/Car_lane_sign_detection-master/right-sign.xml"
 
-#define CAR_IMAGE "/home/robot/robot_ws/src/smart_car_mc110/car.png"
-#define LEFT_SIGN_IMAGE "/home/robot/robot_ws/src/smart_car_mc110/left.png"
-#define RIGHT_SIGN_IMAGE "/home/robot/robot_ws/src/smart_car_mc110/right.png"
+#define CAR_IMAGE "/home/firefly/robot_ws/src/smart_car_mc110/car.png"
+#define LEFT_SIGN_IMAGE "/home/firefly/robot_ws/src/smart_car_mc110/left.png"
+#define RIGHT_SIGN_IMAGE "/home/firefly/robot_ws/src/smart_car_mc110/right.png"
 
 
 using namespace cv;
@@ -807,8 +807,8 @@ void single_eye_body::laneDectionThreadHandler()
          /***********************************************************************/
 
 		// //  Lane-detected func
-        //cvDetectLane(mFrame);
-		ctanSlop++;
+                cvDetectLane(mFrame);
+		//ctanSlop++;
 		std_msgs::UInt8 slopMsg;
 		slopMsg.data = ctanSlop;
 		ctanSlopPub.publish(slopMsg);
