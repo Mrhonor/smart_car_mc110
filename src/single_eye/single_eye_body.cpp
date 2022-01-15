@@ -800,9 +800,7 @@ void single_eye_body::laneDectionThreadHandler()
 		cvImg.toImageMsg(imgMsg);
 		imgPub.publish(imgMsg);
 
-
-		
-
+	
 		resize(originFrame, mFrame, Size(RESIZE_WIDTH, RESIZE_HEIGHT), CV_INTER_LINEAR);
 
 

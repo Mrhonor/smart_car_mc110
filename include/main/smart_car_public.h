@@ -11,7 +11,7 @@ typedef int					int32;  // 32bits signed integer
 typedef unsigned int		uint32; // 32bits unsigned integer
 typedef float               float32;// 32 bits floating point
 
-#define UARTDEVNAME                     "/dev/ttyS1"
+#define UARTDEVNAME                     "/dev/ttyS4"
 #define UARTBAUDRATE                    115200
 #define UARTDATABIT                     8
 #define UARTCHECK	                    0

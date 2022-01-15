@@ -6,13 +6,15 @@
 #include <unistd.h>
 #include <thread>
 
+#include "ros/ros.h"
+
 using namespace std;
 
 // vxWorks claims to implement gettimeofday in sys/time.h
 // but nevertheless does not provide it! See
 // https://support.windriver.com/olsPortal/faces/maintenance/techtipDetail_noHeader.jspx?docId=16442&contentId=WR_TECHTIP_006256
 // We implement a surrogate version here via clock_gettime:
-inline int gettimeofday(struct timeval *tv, void * /*tzv*/) {
+inline int gettimeofday2(struct timeval *tv, void * /*tzv*/) {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   tv->tv_sec  = ts.tv_sec;
