@@ -1,14 +1,14 @@
-#include "single_eye_body.h"
+#include "motion_capture_body.h"
 
 #include "ros/ros.h"
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "smart_car_single_eye");
+	ros::init(argc, argv, "smart_car_motion_capture");
 
 	ros::NodeHandle n;
 	ROS_INFO("START");
-	single_eye_body node(n);
+	motion_capture_body node(n);
 
 	
     ros::AsyncSpinner spinner(2);

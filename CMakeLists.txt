@@ -6,6 +6,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   sensor_msgs
+  geometry_msgs
+  gazebo_msgs
+  nav_msgs
   cv_bridge
   image_transport
   message_generation
@@ -29,6 +32,7 @@ include_directories(
   include
   include/main
   include/single_eye
+  include/motion_capture
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -61,6 +65,18 @@ add_dependencies(smart_car_single_eye ${${PROJECT_NAME}_EXPORTTED_TARGETS}
 target_link_libraries(smart_car_single_eye 
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
+)
+
+add_executable(smart_car_motion_capture
+    src/motion_capture/motion_capture_body.cpp
+    src/motion_capture/motion_capture_main.cpp
+)
+add_dependencies(smart_car_motion_capture ${${PROJECT_NAME}_EXPORTTED_TARGETS}
+                                   ${catkin_EXPORTED_TARGETS}
+                                   )
+
+target_link_libraries(smart_car_motion_capture 
+    ${catkin_LIBRARIES}
 )
 
 
