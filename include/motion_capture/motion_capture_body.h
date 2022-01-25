@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include "gazebo_msgs/ModelStates.h"
-
+#include "sensor_msgs/Imu.h"
 
 
 class motion_capture_body
@@ -11,7 +11,11 @@ class motion_capture_body
 private:
     ros::Subscriber motion_sub;
     ros::Publisher ekf_vo_pub;
+    int seq;
 
+    // only use when simulate
+    ros::Subscriber imu_sub;
+    ros::Publisher ekf_imu_pub;
 
 public:
     motion_capture_body(ros::NodeHandle &n);
@@ -20,6 +24,8 @@ public:
 private:
     void motion_captureCallback(const gazebo_msgs::ModelStates::ConstPtr& msg);
 
+    // only use when simulate
+    void imu_dataCallback(const sensor_msgs::Imu::ConstPtr& msg);
 };
 
 
