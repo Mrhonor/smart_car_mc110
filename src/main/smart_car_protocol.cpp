@@ -86,7 +86,7 @@ int  smart_car_protocol::frameDataProc(uint8* buff,int len)
 	m_RecvData.FRIDCardNo          = makeInt32Data(pCurr);		pCurr += 4;
 
 	for(i = 0;i<9;++i){
-		m_RecvData.JiuZhou[i] = makeInt16Data(pCurr);	    
+		m_RecvData.Gyro[i] = makeInt16Data(pCurr);	    
 		pCurr += 2;
 	}
     
@@ -172,6 +172,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 		return false;
 }
 
+
 void*  smart_car_protocol::frameSendProc(int& len)
 {
 	memset(m_TxBuff,0,sizeof(m_TxBuff));
@@ -181,63 +182,64 @@ void*  smart_car_protocol::frameSendProc(int& len)
 	//*pCurr++ = 0xEE;
 	*pCurr++ = m_StatusFlag;
 	
-	*pCurr++ = 0x26;  /*20210328--帧长度25+10+1+2*/
-	//*pCurr++ = 0x19;  /*帧长度25*/
-    //*pCurr++ = 0x18;  /*帧长度24*/
-	//*pCurr++ = 0x0E;  /*帧长度14*/
-	*pCurr++ = 0x02;
-	
-	*pCurr++ = LOBYTE(m_SendData.TargetSpeed);
-	*pCurr++ = HIBYTE(m_SendData.TargetSpeed);
-	
-	*pCurr++ = LOBYTE(m_SendData.TargetAngle);
-	*pCurr++ = HIBYTE(m_SendData.TargetAngle);
+	*(((uint16 *)pCurr)) = PROTOCOL_TX_LEN;
+	pCurr+=2;
 
-	*pCurr++ = m_SendData.CarSpeed;
-	*pCurr++ = m_SendData.DestanceSense;
-	
-	*(((uint32 *)pCurr)) = m_SendData.FRID_CardNo;
-	pCurr+=4;
-	
-	*(((uint32 *)pCurr)) = m_SendData.MagneticStripeFlag;  /*add by andy 20190909*/
+	*(((uint32 *)pCurr)) = m_SendData.TimeStamp;
 	pCurr+=4;
 
-	*pCurr++ = LOBYTE(m_SendData.RecommendCarSpeed);
-	*pCurr++ = HIBYTE(m_SendData.RecommendCarSpeed);
+	*(((uint32 *)pCurr)) = m_SendData.XPos;
+	pCurr+=4;
 
-	*pCurr++ = LOBYTE(m_SendData.FrontDistance);
-	*pCurr++ = HIBYTE(m_SendData.FrontDistance);
+	*(((uint32 *)pCurr)) = m_SendData.YPos;
+	pCurr+=4;
 
-	*pCurr++ = LOBYTE(m_SendData.LimitSpeed);
-	*pCurr++ = HIBYTE(m_SendData.LimitSpeed);
+	*(((uint32 *)pCurr)) = m_SendData.ZPos;
+	pCurr+=4;
 
-	*pCurr++ = m_SendData.TrafficLightSta;
-	*pCurr++ = m_SendData.TraficLeftSeconds;
-	*pCurr++ = m_SendData.LeftParkNum;
-	*pCurr++ = m_SendData.CarID;
+	*(((uint32 *)pCurr)) = m_SendData.Roll;
+	pCurr+=4;
 
-    /*add by andy 20210328*/
-	*pCurr++ = m_SendData.CallPoliceMode; 
-	*pCurr++ = m_SendData.remote_control;
-	*pCurr++ = m_SendData.control_type;
-	
-	*pCurr++ = LOBYTE(m_SendData.throttle);
-	*pCurr++ = HIBYTE(m_SendData.throttle);
+	*(((uint32 *)pCurr)) = m_SendData.Pitch;
+	pCurr+=4;
 
-	*pCurr++ = LOBYTE(m_SendData.turnAngle);
-	*pCurr++ = HIBYTE(m_SendData.turnAngle);
+	*(((uint32 *)pCurr)) = m_SendData.Yaw;
+	pCurr+=4;
 
-	*pCurr++ = LOBYTE(m_SendData.brake);
-	*pCurr++ = HIBYTE(m_SendData.brake);
+	*(((uint32 *)pCurr)) = m_SendData.XVel;
+	pCurr+=4;
 
-	*pCurr++ = m_SendData.gear;
-	
-	*pCurr++ = m_SendData.RfidAngle; /*add by andy 20210411*/
+	*(((uint32 *)pCurr)) = m_SendData.YVel;
+	pCurr+=4;
 
-	*pCurr++ = LOBYTE(m_SendData.realSenseDis);
-	*pCurr++ = HIBYTE(m_SendData.realSenseDis);
+	*(((uint32 *)pCurr)) = m_SendData.ZVel;
+	pCurr+=4;
 
-	*pCurr++ = m_SendData.reserved;
+	*(((uint32 *)pCurr)) = m_SendData.RollVel;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.PitchVel;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.YawVel;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.XAcc;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.YAcc;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.ZAcc;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.TargetVelocity;
+	pCurr+=4;
+
+	*(((uint32 *)pCurr)) = m_SendData.TargetAngle;
+	pCurr+=4;
+
+	*pCurr++ = m_SendData.ControlMode;
 
 	uint32 crc = makeFrameCheck(m_TxBuff,pCurr-m_TxBuff);
 	*pCurr++ = LOBYTE(LOWORD(crc));
@@ -252,3 +254,84 @@ void*  smart_car_protocol::frameSendProc(int& len)
 	
 	return (void*)m_TxBuff;
 }
+
+// void*  smart_car_protocol::frameSendProc(int& len)
+// {
+// 	memset(m_TxBuff,0,sizeof(m_TxBuff));
+// 	uint8* pCurr = m_TxBuff;
+// 	//帧头
+// 	*pCurr++ = 0x7D;
+// 	//*pCurr++ = 0xEE;
+// 	*pCurr++ = m_StatusFlag;
+	
+// 	*pCurr++ = 0x26;  /*20210328--帧长度25+10+1+2*/
+// 	//*pCurr++ = 0x19;  /*帧长度25*/
+//     //*pCurr++ = 0x18;  /*帧长度24*/
+// 	//*pCurr++ = 0x0E;  /*帧长度14*/
+// 	*pCurr++ = 0x02;
+	
+// 	*pCurr++ = LOBYTE(m_SendData.TargetSpeed);
+// 	*pCurr++ = HIBYTE(m_SendData.TargetSpeed);
+	
+// 	*pCurr++ = LOBYTE(m_SendData.TargetAngle);
+// 	*pCurr++ = HIBYTE(m_SendData.TargetAngle);
+
+// 	*pCurr++ = m_SendData.CarSpeed;
+// 	*pCurr++ = m_SendData.DestanceSense;
+	
+// 	*(((uint32 *)pCurr)) = m_SendData.FRID_CardNo;
+// 	pCurr+=4;
+	
+// 	*(((uint32 *)pCurr)) = m_SendData.MagneticStripeFlag;  /*add by andy 20190909*/
+// 	pCurr+=4;
+
+// 	*pCurr++ = LOBYTE(m_SendData.RecommendCarSpeed);
+// 	*pCurr++ = HIBYTE(m_SendData.RecommendCarSpeed);
+
+// 	*pCurr++ = LOBYTE(m_SendData.FrontDistance);
+// 	*pCurr++ = HIBYTE(m_SendData.FrontDistance);
+
+// 	*pCurr++ = LOBYTE(m_SendData.LimitSpeed);
+// 	*pCurr++ = HIBYTE(m_SendData.LimitSpeed);
+
+// 	*pCurr++ = m_SendData.TrafficLightSta;
+// 	*pCurr++ = m_SendData.TraficLeftSeconds;
+// 	*pCurr++ = m_SendData.LeftParkNum;
+// 	*pCurr++ = m_SendData.CarID;
+
+//     /*add by andy 20210328*/
+// 	*pCurr++ = m_SendData.CallPoliceMode; 
+// 	*pCurr++ = m_SendData.remote_control;
+// 	*pCurr++ = m_SendData.control_type;
+	
+// 	*pCurr++ = LOBYTE(m_SendData.throttle);
+// 	*pCurr++ = HIBYTE(m_SendData.throttle);
+
+// 	*pCurr++ = LOBYTE(m_SendData.turnAngle);
+// 	*pCurr++ = HIBYTE(m_SendData.turnAngle);
+
+// 	*pCurr++ = LOBYTE(m_SendData.brake);
+// 	*pCurr++ = HIBYTE(m_SendData.brake);
+
+// 	*pCurr++ = m_SendData.gear;
+	
+// 	*pCurr++ = m_SendData.RfidAngle; /*add by andy 20210411*/
+
+// 	*pCurr++ = LOBYTE(m_SendData.realSenseDis);
+// 	*pCurr++ = HIBYTE(m_SendData.realSenseDis);
+
+// 	*pCurr++ = m_SendData.reserved;
+
+// 	uint32 crc = makeFrameCheck(m_TxBuff,pCurr-m_TxBuff);
+// 	*pCurr++ = LOBYTE(LOWORD(crc));
+// 	*pCurr++ = HIBYTE(LOWORD(crc));
+// 	*pCurr++ = LOBYTE(HIWORD(crc));
+// 	*pCurr++ = HIBYTE(HIWORD(crc));
+	
+// 	*pCurr++ = 0x7E;
+// 	//*pCurr++ = 0xFF;
+
+// 	len = pCurr - m_TxBuff;
+	
+// 	return (void*)m_TxBuff;
+// }
