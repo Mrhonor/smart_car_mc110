@@ -11,6 +11,16 @@
 
 class smart_car_controller
 {
+private:
+
+    smart_car_communicator* comUart;
+
+    ros::Publisher encoder_pub;
+    ros::Publisher imu_pub;
+
+    int32 imu_seq;
+    int32 encoder_seq;
+
 public:
 
     smart_car_controller(ros::NodeHandle &);
@@ -20,8 +30,10 @@ public:
 
 private:
 
-    smart_car_communicator* comUart;
     void controllerThreadHandle();
+    void SensorInfoPublish(const SRealDataStru& data, const ros::Time &timeStamp);
+    void ImuDataPublish(int16 * gypo, const ros::Time &timeStamp);
+    void encoderDataPublish(const int16 & vel, const ros::Time &timeStamp);
 
     ros::Publisher state_pub_;
     ros::Publisher reference_path_pub_;
