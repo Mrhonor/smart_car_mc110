@@ -20,7 +20,7 @@ void motion_capture_body::motion_captureCallback(const gazebo_msgs::ModelStates:
     pub_msg.header.seq = seq;
     pub_msg.header.stamp = ros::Time::now();
     pub_msg.header.frame_id = "odom";
-    pub_msg.pose.pose = msg->pose[6];
+    pub_msg.pose.pose = msg->pose[1];
     pub_msg.pose.covariance = {1e-4, 0, 0, 0, 0, 0,
                                0, 1e-4, 0, 0, 0, 0,
                                0, 0, 1e-4, 0, 0, 0,
@@ -34,9 +34,12 @@ void motion_capture_body::motion_captureCallback(const gazebo_msgs::ModelStates:
 void motion_capture_body::imu_dataCallback(const sensor_msgs::Imu::ConstPtr& msg){
     sensor_msgs::Imu pub_msg;
     pub_msg = *msg;
+    pub_msg.angular_velocity.z += 0.1;
+    //pub_msg.orientation.w += 0.1; 
+    if(pub_msg.orientation.w > 1) pub_msg.orientation.w = 1;
     pub_msg.orientation_covariance = {1, 0, 0,
                                       0, 1, 0,
-                                      0, 0, 1e-4
+                                      0, 0, 10
 
     };
     pub_msg.angular_velocity_covariance = {1, 0, 0,
@@ -44,8 +47,8 @@ void motion_capture_body::imu_dataCallback(const sensor_msgs::Imu::ConstPtr& msg
                                            0, 0, 1e-4
 
     };
-    pub_msg.linear_acceleration_covariance = {10, 0, 0,
-                                              0, 10, 0,
+    pub_msg.linear_acceleration_covariance = {1000, 0, 0,
+                                              0, 1000, 0,
                                               0, 0, 1e-2
 
     };
