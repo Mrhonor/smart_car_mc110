@@ -58,44 +58,45 @@ uint16  smart_car_protocol::makeInt16Data(uint8* buff)
 	return iTempData;
 }
 
-int  smart_car_protocol::frameDataProc(uint8* buff,int len)
-{
-	//数据长度、数据类型
-	if(buff[0] != PROTOCOL_BODY_LEN || buff[1] != 0x00)//chenflag  0x12B  改为 0x2B
-		return FALSE;
+// // 旧版解包
+// int  smart_car_protocol::frameDataProc(uint8* buff,int len)
+// {
+// 	//数据长度、数据类型
+// 	if(buff[0] != PROTOCOL_BODY_LEN || buff[1] != 0x00)//chenflag  0x12B  改为 0x2B
+// 		return FALSE;
 	
-	m_RecvData.Init();
+// 	m_RecvData.Init();
 	
-	uint8* pCurr = buff;
-	pCurr += 2;
-	int i;
+// 	uint8* pCurr = buff;
+// 	pCurr += 2;
+// 	int i;
 	
-	m_RecvData.SteerAngle          = makeInt16Data(pCurr);     pCurr += 2;
-	m_RecvData.PWM_Signal          = makeInt16Data(pCurr);	   pCurr += 2;
-	m_RecvData.CarSpeed            = makeInt16Data(pCurr);     pCurr += 2;
-	m_RecvData.AGVPos[0]           = *pCurr++;
-	m_RecvData.AGVPos[1]           = *pCurr++;
+// 	m_RecvData.SteerAngle          = makeInt16Data(pCurr);     pCurr += 2;
+// 	m_RecvData.PWM_Signal          = makeInt16Data(pCurr);	   pCurr += 2;
+// 	m_RecvData.CarSpeed            = makeInt16Data(pCurr);     pCurr += 2;
+// 	m_RecvData.AGVPos[0]           = *pCurr++;
+// 	m_RecvData.AGVPos[1]           = *pCurr++;
 	
-	m_RecvData.InfraRedFront       = makeInt16Data(pCurr);		pCurr += 2;
-	m_RecvData.InFraRedLeftFront   = makeInt16Data(pCurr);		pCurr += 2;
-	m_RecvData.InFraRedLeftBack    = makeInt16Data(pCurr);		pCurr += 2;
-	m_RecvData.InFraRedRightFront  = makeInt16Data(pCurr);		pCurr += 2;
-	m_RecvData.InFraRedRightBack   = makeInt16Data(pCurr);	    pCurr += 2;
-	m_RecvData.InFraRedBack        = makeInt16Data(pCurr);	    pCurr += 2;
-	m_RecvData.Energy              = makeInt16Data(pCurr);	    pCurr += 2;
-	m_RecvData.FRIDCardNo          = makeInt32Data(pCurr);		pCurr += 4;
+// 	m_RecvData.InfraRedFront       = makeInt16Data(pCurr);		pCurr += 2;
+// 	m_RecvData.InFraRedLeftFront   = makeInt16Data(pCurr);		pCurr += 2;
+// 	m_RecvData.InFraRedLeftBack    = makeInt16Data(pCurr);		pCurr += 2;
+// 	m_RecvData.InFraRedRightFront  = makeInt16Data(pCurr);		pCurr += 2;
+// 	m_RecvData.InFraRedRightBack   = makeInt16Data(pCurr);	    pCurr += 2;
+// 	m_RecvData.InFraRedBack        = makeInt16Data(pCurr);	    pCurr += 2;
+// 	m_RecvData.Energy              = makeInt16Data(pCurr);	    pCurr += 2;
+// 	m_RecvData.FRIDCardNo          = makeInt32Data(pCurr);		pCurr += 4;
 
-	for(i = 0;i<9;++i){
-		m_RecvData.Gyro[i] = makeInt16Data(pCurr);	    
-		pCurr += 2;
-	}
+// 	for(i = 0;i<9;++i){
+// 		m_RecvData.Gyro[i] = makeInt16Data(pCurr);	    
+// 		pCurr += 2;
+// 	}
     
-	m_RecvData.ErrorCode = *pCurr++;
-#ifdef ANDYTEST
-	C_Debug("[Andy_test 20190717]m_RecvData.CarSpeed = %d, m_RecvData.FRIDCardNo = 0X%0X ", m_RecvData.CarSpeed, m_RecvData.FRIDCardNo);
-#endif
-	return TRUE;
-}
+// 	m_RecvData.ErrorCode = *pCurr++;
+// #ifdef ANDYTEST
+// 	C_Debug("[Andy_test 20190717]m_RecvData.CarSpeed = %d, m_RecvData.FRIDCardNo = 0X%0X ", m_RecvData.CarSpeed, m_RecvData.FRIDCardNo);
+// #endif
+// 	return TRUE;
+// }
 	
 
 // // 旧版解包
@@ -185,6 +186,53 @@ unsigned char smart_car_protocol::Check_Sum(unsigned char Count_Number, uint8* d
 	return check_sum; //Returns the bitwise XOR result //返回按位异或结果
 }
 
+/**************************************
+Date: January 28, 2021
+Function: Data conversion function
+功能: 数据转换函数
+***************************************/
+short smart_car_protocol::IMU_Trans(uint8 Data_High,uint8 Data_Low)
+{
+  short transition_16;
+  transition_16 = 0;
+  transition_16 |=  Data_High<<8;   
+  transition_16 |=  Data_Low;
+  return transition_16;     
+}
+float smart_car_protocol::Odom_Trans(uint8 Data_High,uint8 Data_Low)
+{
+  float data_return;
+  short transition_16;
+  transition_16 = 0;
+  transition_16 |=  Data_High<<8;  //Get the high 8 bits of data   //获取数据的高8位
+  transition_16 |=  Data_Low;      //Get the lowest 8 bits of data //获取数据的低8位
+  data_return   =  (transition_16 / 1000)+(transition_16 % 1000)*0.001; // The speed unit is changed from mm/s to m/s //速度单位从mm/s转换为m/s
+  return data_return;
+}
+
+// ROS新版官方解包
+int  smart_car_protocol::frameDataProc(uint8* buff,int len)
+{
+
+	
+	m_RecvData.Init();
+	
+	uint8* pCurr = buff;
+	int i;
+	
+	m_RecvData.CarSpeed = IMU_Trans(pCurr[2], pCurr[3]); // 里程计数据
+	m_RecvData.Gyro[0] = IMU_Trans(pCurr[8], pCurr[9]);
+	m_RecvData.Gyro[1] = IMU_Trans(pCurr[10], pCurr[11]);
+	m_RecvData.Gyro[2] = IMU_Trans(pCurr[12], pCurr[13]);
+	m_RecvData.Gyro[3] = IMU_Trans(pCurr[14], pCurr[15]);
+	m_RecvData.Gyro[4] = IMU_Trans(pCurr[16], pCurr[17]);
+	m_RecvData.Gyro[5] = IMU_Trans(pCurr[18], pCurr[19]);
+
+
+
+	return TRUE;
+}
+
 // ROS新版官方解包
 int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 {
@@ -217,26 +265,13 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 		}
 		/***chenflag end*****/
 		
-		m_StatusFlag = pHeadr[1];
-		int iInfoByteCount = getInfoByteCount(pHeadr);
-		if (iInfoByteCount != PROTOCOL_BODY_LEN)//chenflag
-		{
-#ifdef PRINTCLASSUARTPROTOCOLINFO
-			printf("frame len error: %d \n", iInfoByteCount);
-#endif
-			return tmp + 1;//chenflag
-		}
-		else if(tmp + 24 > len)//chenflag  数据接收不全
+		if(tmp + 24 > len)//chenflag  数据接收不全
 		{
 			return tmp;
 		}
-		uint32 crcCheckRes = makeFrameCheck(pHeadr,iInfoByteCount + 4);
+		uint8 check_sum = Check_Sum(22, pHeadr);
 
-		uint32 crcCodeCmp = makeInt32Data(pHeadr + iInfoByteCount + 4);
-
-		uint8 ucFrameTail = pHeadr[iInfoByteCount+9-1];
-
-		if(crcCodeCmp != crcCheckRes)
+		if(check_sum != pHeadr[22])
 		{
 #ifdef PRINTCLASSUARTPROTOCOLINFO
 			printf("CRC error\n");
@@ -244,7 +279,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 			//帧校验出错
 			return tmp + 1;
 		}
-		if(ucFrameTail != 0x7E)
+		if(*pHeadr != 0x7D)
 		{
 			//帧尾错误
 #ifdef PRINTCLASSUARTPROTOCOLINFO
@@ -253,7 +288,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 			return tmp + 1;
 		}
 		
-		isSuccess = frameDataProc(pHeadr+2,iInfoByteCount);//chenflag
+		isSuccess = frameDataProc(pHeadr+1,21);//chenflag
 		
 		return tmp + UART_AVERAGE_ONEFRAME_LEN;//chenflag
 	}
@@ -261,90 +296,125 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 		return false;
 }
 
-
-
-
+// ROS新版串口通信函数
 void*  smart_car_protocol::frameSendProc(int& len)
 {
 	memset(m_TxBuff,0,sizeof(m_TxBuff));
 	uint8* pCurr = m_TxBuff;
 	//帧头
-	*pCurr++ = 0x7D;
+	*pCurr++ = 0x7B;
 	//*pCurr++ = 0xEE;
-	*pCurr++ = m_StatusFlag;
+	*pCurr++ = 0;
+	*pCurr++ = 0;
+
+	uint16 temp = (uint16) (m_SendData.XVel * 1000);
+
+	*pCurr++ = temp >> 8;
+	*pCurr++ = temp;
 	
-	*(((uint16 *)pCurr)) = PROTOCOL_TX_LEN;
-	pCurr+=2;
+	temp = (uint16) (m_SendData.YVel * 1000);
 
-	*(((uint32 *)pCurr)) = m_SendData.TimeStamp;
-	pCurr+=4;
+	*pCurr++ = temp >> 8;
+	*pCurr++ = temp;
 
-	*(((uint32 *)pCurr)) = m_SendData.XPos;
-	pCurr+=4;
+	temp = (uint16) (m_SendData.YawVel * 1000);
 
-	*(((uint32 *)pCurr)) = m_SendData.YPos;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.ZPos;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.Roll;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.Pitch;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.Yaw;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.XVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.YVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.ZVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.RollVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.PitchVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.YawVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.XAcc;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.YAcc;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.ZAcc;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.TargetVelocity;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.TargetAngle;
-	pCurr+=4;
-
-	*pCurr++ = m_SendData.ControlMode;
-
-	uint32 crc = makeFrameCheck(m_TxBuff,pCurr-m_TxBuff);
-	*pCurr++ = LOBYTE(LOWORD(crc));
-	*pCurr++ = HIBYTE(LOWORD(crc));
-	*pCurr++ = LOBYTE(HIWORD(crc));
-	*pCurr++ = HIBYTE(HIWORD(crc));
+	*pCurr++ = temp >> 8;
+	*pCurr++ = temp;
 	
-	*pCurr++ = 0x7E;
+	*pCurr++ = Check_Sum(9,m_TxBuff);
+
+	*pCurr++ = 0x7D;
 	//*pCurr++ = 0xFF;
 
 	len = pCurr - m_TxBuff;
 	
 	return (void*)m_TxBuff;
 }
+
+
+// // 旧版串口通信函数
+// void*  smart_car_protocol::frameSendProc(int& len)
+// {
+// 	memset(m_TxBuff,0,sizeof(m_TxBuff));
+// 	uint8* pCurr = m_TxBuff;
+// 	//帧头
+// 	*pCurr++ = 0x7D;
+// 	//*pCurr++ = 0xEE;
+// 	*pCurr++ = m_StatusFlag;
+	
+// 	*(((uint16 *)pCurr)) = PROTOCOL_TX_LEN;
+// 	pCurr+=2;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.TimeStamp;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.XPos;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YPos;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.ZPos;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.Roll;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.Pitch;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.Yaw;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.XVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.ZVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.RollVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.PitchVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YawVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.XAcc;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YAcc;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.ZAcc;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.TargetVelocity;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.TargetAngle;
+// 	pCurr+=4;
+
+// 	*pCurr++ = m_SendData.ControlMode;
+
+// 	uint32 crc = makeFrameCheck(m_TxBuff,pCurr-m_TxBuff);
+// 	*pCurr++ = LOBYTE(LOWORD(crc));
+// 	*pCurr++ = HIBYTE(LOWORD(crc));
+// 	*pCurr++ = LOBYTE(HIWORD(crc));
+// 	*pCurr++ = HIBYTE(HIWORD(crc));
+	
+// 	*pCurr++ = 0x7E;
+// 	//*pCurr++ = 0xFF;
+
+// 	len = pCurr - m_TxBuff;
+	
+// 	return (void*)m_TxBuff;
+// }
 
 // void*  smart_car_protocol::frameSendProc(int& len)
 // {

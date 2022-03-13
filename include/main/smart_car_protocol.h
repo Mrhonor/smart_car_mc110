@@ -34,7 +34,7 @@ public: //impl
 	
 
 	// new version protocol
-	unsigned char smart_car_protocol::Check_Sum(unsigned char Count_Number, uint8* data);
+	unsigned char Check_Sum(unsigned char Count_Number, uint8* data);
 	
 protected:
 	uint8 m_TxBuff[TX_BUFF_LEN];
@@ -44,6 +44,9 @@ protected:
 	
 	SRealDataStru m_RecvData;
 	SCommandDataStru m_SendData;
+
+	short IMU_Trans(uint8 Data_High,uint8 Data_Low);
+	float Odom_Trans(uint8 Data_High,uint8 Data_Low);
 };
 
 #endif

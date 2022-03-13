@@ -27,6 +27,8 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 
     control_sub_ = n.subscribe("/MPCC/Control", 10, &smart_car_controller::mpccControlCallback, this);
 
+    cmd_vel_sub  = n.subscribe("cmd_vel",     100, &smart_car_controller::Cmd_Vel_Callback, this); 
+
     ifstream iConfig("/home/mr/robot_ws/src/MPCC/Params/config.json");
     json jsonConfig;
     iConfig >> jsonConfig;
@@ -256,4 +258,12 @@ void smart_car_controller::encoderDataPublish(const int16 & vel, const ros::Time
     };
 
     encoder_pub.publish(pub_msg);
+}
+
+void smart_car_controller::Cmd_Vel_Callback(const geometry_msgs::TwistConstPtr& msg){
+    SCommandDataStru sendData;
+    sendData.XVel = msg->linear.x;
+    sendData.YVel = msg->linear.y;
+    sendData.YawVel = msg->angular.z;
+    comUart->uartTxHandle(sendData);
 }
