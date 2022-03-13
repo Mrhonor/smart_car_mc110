@@ -32,6 +32,9 @@ public: //impl
 	SRealDataStru  getRealDataStruContext(){return m_RecvData;}
 	void  setCommandDataStru(SCommandDataStru data) {m_SendData = data;}
 	
+
+	// new version protocol
+	unsigned char smart_car_protocol::Check_Sum(unsigned char Count_Number, uint8* data);
 	
 protected:
 	uint8 m_TxBuff[TX_BUFF_LEN];

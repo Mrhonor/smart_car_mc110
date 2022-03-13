@@ -97,19 +97,108 @@ int  smart_car_protocol::frameDataProc(uint8* buff,int len)
 	return TRUE;
 }
 	
+
+// // 旧版解包
+// int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
+// {
+// 	int i = 0;
+// 	int tmp = 0;//flagchen  用于存储找到帧头前的数据个数
+// 	isSuccess = 0;
+// 	if(len >= UART_AVERAGE_ONEFRAME_LEN)//chenflag 超过帧长度则处理，否则不处理
+// 	{
+// 		memcpy((void*)m_RxBuff,rxData,len);
+// 		uint8* pHeadr = m_RxBuff;
+// 		//找帧头
+// 		for(i=0;i< len;++i)//chenflag  此处如果i=len仍然没有找到帧头要退出，并返回len,否则会越界。如果在i=n时找到帧头要记录
+// 		{
+// 			if(m_RxBuff[i] != 0x7D)
+//             {
+// 				pHeadr++;
+// 				continue;
+// 			}		
+//             break;			
+// 		}
+
+// 		/***chenflag*****/
+// 		if(i == len)
+// 		{
+// 			return len;
+// 		}
+// 		else if(i < len)
+// 		{
+// 			tmp = i;
+// 		}
+// 		/***chenflag end*****/
+		
+// 		m_StatusFlag = pHeadr[1];
+// 		int iInfoByteCount = getInfoByteCount(pHeadr);
+// 		if (iInfoByteCount != PROTOCOL_BODY_LEN)//chenflag
+// 		{
+// #ifdef PRINTCLASSUARTPROTOCOLINFO
+// 			printf("frame len error: %d \n", iInfoByteCount);
+// #endif
+// 			return tmp + 1;//chenflag
+// 		}
+// 		else if(tmp + UART_AVERAGE_ONEFRAME_LEN > len)//chenflag  数据接收不全
+// 		{
+// 			return tmp;
+// 		}
+// 		uint32 crcCheckRes = makeFrameCheck(pHeadr,iInfoByteCount + 4);
+
+// 		uint32 crcCodeCmp = makeInt32Data(pHeadr + iInfoByteCount + 4);
+
+// 		uint8 ucFrameTail = pHeadr[iInfoByteCount+9-1];
+
+// 		if(crcCodeCmp != crcCheckRes)
+// 		{
+// #ifdef PRINTCLASSUARTPROTOCOLINFO
+// 			printf("CRC error\n");
+// #endif
+// 			//帧校验出错
+// 			return tmp + 1;
+// 		}
+// 		if(ucFrameTail != 0x7E)
+// 		{
+// 			//帧尾错误
+// #ifdef PRINTCLASSUARTPROTOCOLINFO
+// 			printf("frame tail error: %x \n", ucFrameTail);
+// #endif
+// 			return tmp + 1;
+// 		}
+		
+// 		isSuccess = frameDataProc(pHeadr+2,iInfoByteCount);//chenflag
+		
+// 		return tmp + UART_AVERAGE_ONEFRAME_LEN;//chenflag
+// 	}
+// 	else//chenflag
+// 		return false;
+// }
+
+unsigned char smart_car_protocol::Check_Sum(unsigned char Count_Number, uint8* data)
+{
+	unsigned char check_sum=0,k;
+
+	for(k=0;k<Count_Number;k++)
+	{
+		check_sum=check_sum^data[k]; //By bit or by bit //按位异或
+	}
+	return check_sum; //Returns the bitwise XOR result //返回按位异或结果
+}
+
+// ROS新版官方解包
 int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 {
 	int i = 0;
 	int tmp = 0;//flagchen  用于存储找到帧头前的数据个数
 	isSuccess = 0;
-	if(len >= UART_AVERAGE_ONEFRAME_LEN)//chenflag 超过帧长度则处理，否则不处理
+	if(len >= 24)//chenflag 超过帧长度则处理，否则不处理
 	{
 		memcpy((void*)m_RxBuff,rxData,len);
 		uint8* pHeadr = m_RxBuff;
 		//找帧头
 		for(i=0;i< len;++i)//chenflag  此处如果i=len仍然没有找到帧头要退出，并返回len,否则会越界。如果在i=n时找到帧头要记录
 		{
-			if(m_RxBuff[i] != 0x7D)
+			if(m_RxBuff[i] != 0x7B)
             {
 				pHeadr++;
 				continue;
@@ -137,7 +226,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 #endif
 			return tmp + 1;//chenflag
 		}
-		else if(tmp + UART_AVERAGE_ONEFRAME_LEN > len)//chenflag  数据接收不全
+		else if(tmp + 24 > len)//chenflag  数据接收不全
 		{
 			return tmp;
 		}
@@ -171,6 +260,8 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 	else//chenflag
 		return false;
 }
+
+
 
 
 void*  smart_car_protocol::frameSendProc(int& len)
