@@ -286,7 +286,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 			return tmp + 1;
 		}
 		
-		isSuccess = frameDataProc(pHeadr+1,21);//chenflag
+		isSuccess = frameDataProc(pHeadr,22);//chenflag
 		
 		return tmp + 24;//chenflag
 	}
