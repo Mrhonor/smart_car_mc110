@@ -29,19 +29,19 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 
     cmd_vel_sub  = n.subscribe("cmd_vel",     100, &smart_car_controller::Cmd_Vel_Callback, this); 
 
-    ifstream iConfig("/home/mr/robot_ws/src/MPCC/Params/config.json");
-    json jsonConfig;
-    iConfig >> jsonConfig;
+//    ifstream iConfig("/home/mr/robot_ws/src/MPCC/Params/config.json");
+//    json jsonConfig;
+//    iConfig >> jsonConfig;
 
-    PathToJson json_paths {jsonConfig["model_path"],
-                           jsonConfig["cost_path"],
-                           jsonConfig["bounds_path"],
-                           jsonConfig["track_path"],
-                           jsonConfig["normalization_path"]};
+//    PathToJson json_paths {jsonConfig["model_path"],
+//                           jsonConfig["cost_path"],
+//                           jsonConfig["bounds_path"],
+//                           jsonConfig["track_path"],
+//                           jsonConfig["normalization_path"]};
 
-    integrator = new Integrator(jsonConfig["Ts"],json_paths);
-    x0 = {0, 0,0,jsonConfig["v0"],0,0,0,0.5,0,jsonConfig["v0"]};
-    Ts = jsonConfig["Ts"];
+//    integrator = new Integrator(jsonConfig["Ts"],json_paths);
+//    x0 = {0, 0,0,jsonConfig["v0"],0,0,0,0.5,0,jsonConfig["v0"]};
+//    Ts = jsonConfig["Ts"];
     TempSimuEnd = 0;
 
     // 开启线程
@@ -51,7 +51,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 
 smart_car_controller::~smart_car_controller(){
     delete comUart;
-    delete integrator;
+//    delete integrator;
 }
 
 void smart_car_controller::controllerThreadHandle(){

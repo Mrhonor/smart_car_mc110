@@ -3,6 +3,7 @@
 #include "crcThings.h"
 
 #include <string.h>
+#include <iostream>
 
 
 #define PROTOCOL_HEAD_LEN	4
@@ -241,6 +242,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 	isSuccess = 0;
 	if(len >= 24)//chenflag 超过帧长度则处理，否则不处理
 	{
+		printf("1");
 		memcpy((void*)m_RxBuff,rxData,len);
 		uint8* pHeadr = m_RxBuff;
 		//找帧头
@@ -273,24 +275,20 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 
 		if(check_sum != pHeadr[22])
 		{
-#ifdef PRINTCLASSUARTPROTOCOLINFO
 			printf("CRC error\n");
-#endif
 			//帧校验出错
 			return tmp + 1;
 		}
-		if(*pHeadr != 0x7D)
+		if(pHeadr[23] != 0x7D)
 		{
 			//帧尾错误
-#ifdef PRINTCLASSUARTPROTOCOLINFO
-			printf("frame tail error: %x \n", ucFrameTail);
-#endif
+			printf("frame tail error: \n");
 			return tmp + 1;
 		}
 		
 		isSuccess = frameDataProc(pHeadr+1,21);//chenflag
 		
-		return tmp + UART_AVERAGE_ONEFRAME_LEN;//chenflag
+		return tmp + 24;//chenflag
 	}
 	else//chenflag
 		return false;

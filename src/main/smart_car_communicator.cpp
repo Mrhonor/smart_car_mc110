@@ -94,7 +94,7 @@ bool smart_car_communicator::uartRxHandle(SRealDataStru & RecvData)
 
 	struct timeval tv_begin;
 	 
-	if((currentQueueCount = uartToMainQ->getCurrentLenInBytes()) >= UART_AVERAGE_ONEFRAME_LEN)
+	if((currentQueueCount = uartToMainQ->getCurrentLenInBytes()) >= 24)
 	{
 		gettimeofday(&tv_begin, NULL);
 		
