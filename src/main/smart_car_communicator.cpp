@@ -199,6 +199,6 @@ bool smart_car_communicator::uartRxHandle(SRealDataStru & RecvData)
 #endif
 		}
 	}
-	else usleep(1000);
+	
 	return false;
 }

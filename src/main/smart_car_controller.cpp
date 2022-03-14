@@ -17,7 +17,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
     encoder_seq(0)
 {
     ROS_INFO("controller init");
-    // comUart = new smart_car_communicator();
+    comUart = new smart_car_communicator();
 
     state_pub_ = n.advertise<std_msgs::Float64MultiArray>("/EKF/State", 10);
     reference_path_pub_ = n.advertise<std_msgs::Float64MultiArray>("/RefPath", 10);
@@ -55,24 +55,21 @@ smart_car_controller::~smart_car_controller(){
 }
 
 void smart_car_controller::controllerThreadHandle(){
-    // SCommandDataStru data;
-    // data.Init();
-    // data.TargetAngle = 45;
-    // data.TargetSpeed = 2000;
-    // data.RecommendCarSpeed = 2000;
-    // data.LimitSpeed = 2000;
-    // data.control_type = 1;
-    // data.remote_control = 1;
-    // data.throttle = 1;
-    // data.turnAngle = 45;
-    // data.gear = 1;
-    // while (ros::ok())
-    // {
-    //     comUart->uartTxHandle(data);
-    //     ros::Duration(0.01).sleep();
-    // }
-    ros::Duration(1).sleep();
-    trackPublish();
+    SRealDataStru data;
+    data.Init();
+    while (ros::ok())
+    {
+        
+        if(comUart->uartRxHandle(data)){
+            SensorInfoPublish(data, ros::Time::now());
+        }
+        else{
+            ros::Duration(0.001).sleep();
+        }
+        
+    }
+    // ros::Duration(1).sleep();
+    // trackPublish();
 }
 
 void smart_car_controller::trackPublish(){
