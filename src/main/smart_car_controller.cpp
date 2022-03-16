@@ -183,13 +183,13 @@ void smart_car_controller::SensorInfoPublish(const SRealDataStru& data, const ro
 void smart_car_controller::ImuDataPublish(const int16 * gypo, const ros::Time &timeStamp){
     // 解包MPU9250数据
     // MPU9250数据给出int16位的数据，数据表示范围为MPU9250_ANGLEVEL_RANGE、MPU9250_ACC_RANGE
-    double RollVel = gypo[0] / 32768.0 * MPU9250_ANGLEVEL_RANGE;
-    double PitchVel = gypo[1] / 32768.0 * MPU9250_ANGLEVEL_RANGE;
-    double YawVel = gypo[2] / 32768.0 * MPU9250_ANGLEVEL_RANGE;
+    double RollVel = gypo[3] / 32768.0 * MPU9250_ANGLEVEL_RANGE;
+    double PitchVel = gypo[4] / 32768.0 * MPU9250_ANGLEVEL_RANGE;
+    double YawVel = gypo[5] / 32768.0 * MPU9250_ANGLEVEL_RANGE;
 
-    double XAcc = gypo[3] / 32768.0 * MPU9250_ACC_RANGE;
-    double YAcc = gypo[4] / 32768.0 * MPU9250_ACC_RANGE;
-    double ZAcc = gypo[5] / 32768.0 * MPU9250_ACC_RANGE;
+    double XAcc = gypo[0] / 32768.0 * MPU9250_ACC_RANGE;
+    double YAcc = gypo[1] / 32768.0 * MPU9250_ACC_RANGE;
+    double ZAcc = gypo[2] / 32768.0 * MPU9250_ACC_RANGE;
 
     // 计算方向角，程序来源自MPU6050解包方式，不一定相同，有待测试
     double Roll = gypo[6] * 0.00549;

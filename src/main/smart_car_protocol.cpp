@@ -242,7 +242,7 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 	isSuccess = 0;
 	if(len >= 24)//chenflag 超过帧长度则处理，否则不处理
 	{
-		printf("1");
+		//printf("1");
 		memcpy((void*)m_RxBuff,rxData,len);
 		uint8* pHeadr = m_RxBuff;
 		//找帧头
@@ -305,17 +305,17 @@ void*  smart_car_protocol::frameSendProc(int& len)
 	*pCurr++ = 0;
 	*pCurr++ = 0;
 
-	uint16 temp = (uint16) (m_SendData.XVel * 1000);
+	int16 temp = (int16) (m_SendData.XVel * 1000);
 
 	*pCurr++ = temp >> 8;
 	*pCurr++ = temp;
 	
-	temp = (uint16) (m_SendData.YVel * 1000);
+	temp = (int16) (m_SendData.YVel * 1000);
 
 	*pCurr++ = temp >> 8;
 	*pCurr++ = temp;
 
-	temp = (uint16) (m_SendData.YawVel * 1000);
+	temp = (int16) (m_SendData.YawVel * 1000);
 
 	*pCurr++ = temp >> 8;
 	*pCurr++ = temp;
