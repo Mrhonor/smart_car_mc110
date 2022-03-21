@@ -32,7 +32,7 @@ private:
 
     void controllerThreadHandle();
     void SensorInfoPublish(const SRealDataStru& data, const ros::Time &timeStamp);
-    void ImuDataPublish(int16 * gypo, const ros::Time &timeStamp);
+    void ImuDataPublish(const int16 * gypo, const ros::Time &timeStamp);
     void encoderDataPublish(const int16 & vel, const ros::Time &timeStamp);
 
     ros::Publisher state_pub_;
