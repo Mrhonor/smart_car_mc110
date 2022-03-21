@@ -200,7 +200,7 @@ typedef struct _tagCommandData
 	float32 ZAcc;
 
 	// control command
-	float32 TargetVelocity; //目标速度
+	float32 TargetVelocity; //目标油门
 	float32 TargetAngle; //目标角度
 	
 	uint8 ControlMode; //控制模式

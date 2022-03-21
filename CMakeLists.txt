@@ -33,6 +33,8 @@ include_directories(
   include/main
   include/single_eye
   include/motion_capture
+  External/Eigen
+  External/Json/include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -45,10 +47,17 @@ add_executable(smart_car_main
     src/main/smart_car_main.cpp
     src/main/smart_car_protocol.cpp
     src/main/smart_car_uart.cpp
+    src/main/integrator.cpp
+    src/main/model.cpp
+    src/main/types.cpp
+    src/main/params.cpp
 )
 add_dependencies(smart_car_main ${${PROJECT_NAME}_EXPORTTED_TARGETS}
                                    ${catkin_EXPORTED_TARGETS}
                                    )
+# find_package(Python COMPONENTS Development)
+# target_include_directories(smart_car_main PRIVATE ${Python_INCLUDE_DIRS} ${catkin_LIBRARIES})
+# target_link_libraries(smart_car_main ${Python_LIBRARIES} ${catkin_LIBRARIES})
 
 target_link_libraries(smart_car_main 
     ${catkin_LIBRARIES}
