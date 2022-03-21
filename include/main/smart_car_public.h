@@ -67,8 +67,8 @@ typedef float               float32;// 32 bits floating point
 #define HIWORD(l)   ((uint16)(((uint32)(l) >> 16) & 0xFFFF))
 #define LOWORD(l)   ((uint16)(l))
 
-#define MPU9250_ANGLEVEL_RANGE 250 // MPU9250测量角速度范围±250
-#define MPU9250_ACC_RANGE	   2*9.8 // MPU9250测量加速度范围±2g
+#define MPU9250_ANGLEVEL_RANGE 2000 // MPU9250测量角速度范围±250
+#define MPU9250_ACC_RANGE	   16*9.8 // MPU9250测量加速度范围±2g
 #define MPU9250_MAG_RANGE      4800  // MPU9250测量磁场强度范围±4800μT
 #define PI 					   3.14159265
 

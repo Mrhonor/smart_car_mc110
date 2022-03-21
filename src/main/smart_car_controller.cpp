@@ -16,7 +16,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
     encoder_seq(0)
 {
     ROS_INFO("controller init");
-    // comUart = new smart_car_communicator();
+    comUart = new smart_car_communicator();
 
     state_pub_ = n.advertise<nav_msgs::Odometry>("/Odometry/ekf_estimated", 10);
     reference_path_pub_ = n.advertise<nav_msgs::Path>("/Path/LocalWaypoint/OnBody", 10);
