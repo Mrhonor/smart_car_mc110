@@ -41,6 +41,8 @@ protected:
 	
 	SRealDataStru m_RecvData;
 	SCommandDataStru m_SendData;
+
+	unsigned char Check_Sum(unsigned char Count_Number, uint8* data);
 };
 
 #endif

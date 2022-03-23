@@ -173,87 +173,139 @@ int  smart_car_protocol::frameRecvProc(void* rxData,int len,int & isSuccess)
 }
 
 
+// void*  smart_car_protocol::frameSendProc(int& len)
+// {
+// 	memset(m_TxBuff,0,sizeof(m_TxBuff));
+// 	uint8* pCurr = m_TxBuff;
+// 	//帧头
+// 	*pCurr++ = 0x7D;
+// 	//*pCurr++ = 0xEE;
+// 	*pCurr++ = m_StatusFlag;
+	
+// 	*(((uint16 *)pCurr)) = PROTOCOL_TX_LEN;
+// 	pCurr+=2;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.TimeStamp;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.XPos;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YPos;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.ZPos;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.Roll;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.Pitch;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.Yaw;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.XVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.ZVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.RollVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.PitchVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YawVel;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.XAcc;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.YAcc;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.ZAcc;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.TargetVelocity;
+// 	pCurr+=4;
+
+// 	*(((uint32 *)pCurr)) = m_SendData.TargetAngle;
+// 	pCurr+=4;
+
+// 	*pCurr++ = m_SendData.ControlMode;
+
+// 	uint32 crc = makeFrameCheck(m_TxBuff,pCurr-m_TxBuff);
+// 	*pCurr++ = LOBYTE(LOWORD(crc));
+// 	*pCurr++ = HIBYTE(LOWORD(crc));
+// 	*pCurr++ = LOBYTE(HIWORD(crc));
+// 	*pCurr++ = HIBYTE(HIWORD(crc));
+	
+// 	*pCurr++ = 0x7E;
+// 	//*pCurr++ = 0xFF;
+
+// 	len = pCurr - m_TxBuff;
+	
+// 	return (void*)m_TxBuff;
+// }
+
+
+// 下位机协议不便于测试，先用已测试过的简易版
+unsigned char smart_car_protocol::Check_Sum(unsigned char Count_Number, uint8* data)
+{
+	unsigned char check_sum=0,k;
+
+	for(k=0;k<Count_Number;k++)
+	{
+		check_sum=check_sum^data[k]; //By bit or by bit //按位异或
+	}
+	return check_sum; //Returns the bitwise XOR result //返回按位异或结果
+}
+
+// ROS新版串口通信函数
 void*  smart_car_protocol::frameSendProc(int& len)
 {
 	memset(m_TxBuff,0,sizeof(m_TxBuff));
 	uint8* pCurr = m_TxBuff;
 	//帧头
-	*pCurr++ = 0x7D;
+	*pCurr++ = 0x7B;
 	//*pCurr++ = 0xEE;
-	*pCurr++ = m_StatusFlag;
+	*pCurr++ = 0;
+	*pCurr++ = 0;
+
+	int16 temp = (int16) (m_SendData.TargetVelocity * 1000);
+
+	*pCurr++ = temp >> 8;
+	*pCurr++ = temp;
 	
-	*(((uint16 *)pCurr)) = PROTOCOL_TX_LEN;
-	pCurr+=2;
+	temp = (int16) (m_SendData.TargetAngle * 1000);
 
-	*(((uint32 *)pCurr)) = m_SendData.TimeStamp;
-	pCurr+=4;
+	*pCurr++ = temp >> 8;
+	*pCurr++ = temp;
 
-	*(((uint32 *)pCurr)) = m_SendData.XPos;
-	pCurr+=4;
+	temp = (int16) (m_SendData.YawVel * 1000);
 
-	*(((uint32 *)pCurr)) = m_SendData.YPos;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.ZPos;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.Roll;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.Pitch;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.Yaw;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.XVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.YVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.ZVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.RollVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.PitchVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.YawVel;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.XAcc;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.YAcc;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.ZAcc;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.TargetVelocity;
-	pCurr+=4;
-
-	*(((uint32 *)pCurr)) = m_SendData.TargetAngle;
-	pCurr+=4;
-
-	*pCurr++ = m_SendData.ControlMode;
-
-	uint32 crc = makeFrameCheck(m_TxBuff,pCurr-m_TxBuff);
-	*pCurr++ = LOBYTE(LOWORD(crc));
-	*pCurr++ = HIBYTE(LOWORD(crc));
-	*pCurr++ = LOBYTE(HIWORD(crc));
-	*pCurr++ = HIBYTE(HIWORD(crc));
+	*pCurr++ = temp >> 8;
+	*pCurr++ = temp;
 	
-	*pCurr++ = 0x7E;
+	*pCurr++ = Check_Sum(9,m_TxBuff);
+
+	*pCurr++ = 0x7D;
 	//*pCurr++ = 0xFF;
 
 	len = pCurr - m_TxBuff;
 	
 	return (void*)m_TxBuff;
 }
+
+
+
 
 // void*  smart_car_protocol::frameSendProc(int& len)
 // {
