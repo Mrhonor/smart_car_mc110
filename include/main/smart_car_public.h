@@ -47,7 +47,7 @@ typedef float               float32;// 32 bits floating point
 #define RFIDANGLE                   100
 #define REALSENSEDIS                0
 
-#define PROTOCOL_TX_LEN   			64
+#define PROTOCOL_TX_LEN   			73
 
 #define TRUE   1
 #define FALSE  0
