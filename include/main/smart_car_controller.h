@@ -13,6 +13,7 @@
 #include "types.h"
 #include "std_msgs/Float64MultiArray.h"
 #include "nav_msgs/Odometry.h"
+#include "geometry_msgs/Twist.h"
 
 // simulation
 using namespace mpcc;
@@ -44,6 +45,8 @@ private:
     ros::Publisher reference_path_pub_;
 
     ros::Subscriber control_sub_;
+    ros::Subscriber cmd_vel_sub;
+
     double Ts;
     int TempSimuEnd;
 
@@ -58,6 +61,7 @@ public:
     void mpccControlCallback(const std_msgs::Float64MultiArrayConstPtr&);
     void ekfCallback(const nav_msgs::OdometryConstPtr&);
 
+
 private:
 
     void controllerThreadHandle();
@@ -65,7 +69,7 @@ private:
     void ImuDataPublish(const int16 * gypo, const ros::Time &timeStamp);
     void encoderDataPublish(const int16 & vel, const ros::Time &timeStamp);
 
-
+    void Cmd_Vel_Callback(const geometry_msgs::TwistConstPtr&);
 };
 
 

@@ -174,6 +174,7 @@ typedef float               float32;// 32 bits floating point
 	
 // }SCommandDataStru;
 
+
 typedef struct _tagCommandData
 {
 	float32 TimeStamp; // 时间戳
@@ -224,6 +225,56 @@ typedef struct _tagCommandData
 	}
 	
 }SCommandDataStru;
+
+
+
+// // 旧版数据结构
+// typedef struct _tagRealData
+// {
+// 	int16 SteerAngle;
+// 	int16 PWM_Signal;
+// 	int16 CarSpeed;
+// 	int8 AGVPos[2];
+// 	uint16 InfraRedFront;       //InfraRed1
+// 	uint16 InFraRedLeftFront;   //InfraRed2
+// 	uint16 InFraRedLeftBack;    //InfraRed3
+// 	uint16 InFraRedRightFront;  //InfraRed4
+// 	uint16 InFraRedRightBack;   //InfraRed5
+// 	uint16 InFraRedBack;        //InfraRed6
+// 	uint16 Energy;
+// 	uint32 FRIDCardNo;
+// 	int16 Gyro[9];
+// 	uint8 ErrorCode;
+	
+// 	_tagRealData()
+// 	{
+// 		Init();
+// 	}
+	
+// 	void Init()
+// 	{
+// 		memset(this,0,sizeof(_tagRealData));
+// 	}
+// 	void operator =(_tagRealData data)
+// 	{
+// 		Init();
+// 		SteerAngle = data.SteerAngle;
+// 		PWM_Signal = data.PWM_Signal;
+// 		CarSpeed = data.CarSpeed;
+// 		memcpy(AGVPos,data.AGVPos,sizeof(int8)*2);
+// 		InfraRedFront      = data.InfraRedFront;
+// 		InFraRedLeftFront  = data.InFraRedLeftFront;
+// 		InFraRedLeftBack   = data.InFraRedLeftBack;
+// 		InFraRedRightFront = data.InFraRedRightFront;
+// 		InFraRedRightBack  = data.InFraRedRightBack;
+// 		InFraRedBack       = data.InFraRedBack;
+// 		Energy = data.Energy;
+// 		FRIDCardNo = data.FRIDCardNo;
+// 		memcpy(Gyro,data.Gyro,sizeof(int16)*9);
+// 		ErrorCode = data.ErrorCode;
+// 	}
+	
+// }SRealDataStru;
 
 typedef struct _tagRealData
 {

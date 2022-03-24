@@ -32,6 +32,8 @@ public: //impl
 	SRealDataStru  getRealDataStruContext(){return m_RecvData;}
 	void  setCommandDataStru(SCommandDataStru data) {m_SendData = data;}
 	
+
+
 	
 protected:
 	uint8 m_TxBuff[TX_BUFF_LEN];
@@ -43,6 +45,8 @@ protected:
 	SCommandDataStru m_SendData;
 
 	unsigned char Check_Sum(unsigned char Count_Number, uint8* data);
+	short IMU_Trans(uint8 Data_High,uint8 Data_Low);
+	float Odom_Trans(uint8 Data_High,uint8 Data_Low);
 };
 
 #endif
