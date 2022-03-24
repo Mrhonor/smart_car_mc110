@@ -33,7 +33,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 
     cmd_vel_sub  = n.subscribe("cmd_vel",     100, &smart_car_controller::Cmd_Vel_Callback, this); 
 
-    ifstream iConfig("/home/mr/robot_ws/src/MPCC/Params/config.json");
+    ifstream iConfig("/home/firefly/robot_ws/src/MPCC/Params/config.json");
     json jsonConfig;
     iConfig >> jsonConfig;
 
