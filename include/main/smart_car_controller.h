@@ -12,6 +12,7 @@
 #include "integrator.h"
 #include "types.h"
 #include "std_msgs/Float64MultiArray.h"
+#include "nav_msgs/Odometry.h"
 
 // simulation
 using namespace mpcc;
@@ -23,10 +24,14 @@ private:
     smart_car_communicator* comUart;
     
     SCommandDataStru ControlState;
-    ros::Time LastTxTime;
+    ros::Time LastTxTime;   // 用于更新x0
+    // ros::Time LastPubTime;      // 用于发给mpcc
+
 
     ros::Publisher encoder_pub;
     ros::Publisher imu_pub;
+
+    ros::Subscriber ekf_sub;
 
     int32 imu_seq;
     int32 encoder_seq;
@@ -51,6 +56,7 @@ public:
     void trackPublish();
     void statePublish();
     void mpccControlCallback(const std_msgs::Float64MultiArrayConstPtr&);
+    void ekfCallback(const nav_msgs::OdometryConstPtr&);
 
 private:
 

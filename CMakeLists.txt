@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
   nav_msgs
   cv_bridge
+  tf
   image_transport
   message_generation
 )

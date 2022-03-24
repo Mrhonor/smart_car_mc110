@@ -4,6 +4,8 @@
 #include "geometry_msgs/Pose.h"
 #include "sensor_msgs/Imu.h"
 #include "geometry_msgs/TwistWithCovarianceStamped.h"
+#include "tf/transform_datatypes.h"
+
 
 #include <thread>
 // simulation
@@ -27,6 +29,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
     imu_pub = n.advertise<sensor_msgs::Imu>("/smart_car_mc110/imu_data", 10);
 
     control_sub_ = n.subscribe("/MPCC/Control", 10, &smart_car_controller::mpccControlCallback, this);
+    ekf_sub = n.subscribe("odometry/filtered", 10, &smart_car_controller::ekfCallback, this);
 
     ifstream iConfig("/home/mr/robot_ws/src/MPCC/Params/config.json");
     json jsonConfig;
@@ -39,7 +42,8 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
                            jsonConfig["normalization_path"]};
 
     integrator = new Integrator(jsonConfig["Ts"],json_paths);
-    x0 = {0, 0,0,jsonConfig["v0"],0,0,0,0.5,0,jsonConfig["v0"]};
+    // x0 = {0, 0,0,jsonConfig["v0"],0,0,0,0.5,0,jsonConfig["v0"]};
+    x0 = {0, 0,0,0,0,0,0,0,0,0};
     Ts = jsonConfig["Ts"];
     TempSimuEnd = 0;
 
@@ -60,7 +64,7 @@ smart_car_controller::~smart_car_controller(){
 void smart_car_controller::controllerThreadHandle(){
     SRealDataStru data;
     data.Init();
-
+    trackPublish();
     while (ros::ok())
     {
         
@@ -68,14 +72,19 @@ void smart_car_controller::controllerThreadHandle(){
             ros::Time timeStamp = ros::Time::now();
             SensorInfoPublish(data, timeStamp);
         }
-        else ros::Duration(0.01).sleep();
+        
 
         ros::Time curTime = ros::Time::now();
         double dt = (curTime.toSec() - LastTxTime.toSec());
-        ControlState.TargetVelocity += u0.dD * dt;
-        ControlState.TargetAngle += u0.dDelta * dt;
+        x0.D += u0.dD * dt;
+        x0.delta += u0.dDelta * dt;
+        x0.vs += u0.dVs * dt;
+        ControlState.TargetVelocity = x0.D;
+        ControlState.TargetAngle = x0.delta;
         comUart->uartTxHandle(ControlState);
         LastTxTime = curTime;
+
+        ros::Duration(0.01).sleep();
     }
     // ros::Duration(1).sleep();
     // trackPublish();
@@ -133,8 +142,8 @@ void smart_car_controller::trackPublish(){
     
     reference_path_pub_.publish(ref_msg);
 
-    ros::Duration(1).sleep();
-    statePublish();
+    // ros::Duration(1).sleep();
+    // statePublish();
     // nav_msgs::Odometry msg;
     // msg.header.seq = 0;
     // msg.header.stamp = ros::Time::now();
@@ -264,4 +273,21 @@ void smart_car_controller::encoderDataPublish(const int16 & vel, const ros::Time
     };
 
     encoder_pub.publish(pub_msg);
+}
+
+void smart_car_controller::ekfCallback(const nav_msgs::OdometryConstPtr& msg){
+    x0.X = msg->pose.pose.position.x;
+    x0.Y = msg->pose.pose.position.y;
+
+    tf::Quaternion quat;
+    tf::quaternionMsgToTF(msg->pose.pose.orientation, quat);
+
+    
+    double roll, pitch, yaw;//定义存储r\p\y的容器
+    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+    x0.phi = yaw;
+    x0.vx = msg->twist.twist.linear.x;
+    x0.vy = msg->twist.twist.linear.y;
+    x0.r = msg->twist.twist.angular.z;
+    statePublish();
 }
