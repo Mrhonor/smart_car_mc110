@@ -10,7 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
   nav_msgs
   cv_bridge
-  tf
+  tf2
+  tf2_ros
   image_transport
   message_generation
 )
@@ -86,6 +87,17 @@ add_dependencies(smart_car_motion_capture ${${PROJECT_NAME}_EXPORTTED_TARGETS}
                                    )
 
 target_link_libraries(smart_car_motion_capture 
+    ${catkin_LIBRARIES}
+)
+
+add_executable(smart_car_tf
+    src/open_vins_tf/tf_main.cpp
+)
+add_dependencies(smart_car_tf ${${PROJECT_NAME}_EXPORTTED_TARGETS}
+                                   ${catkin_EXPORTED_TARGETS}
+                                   )
+
+target_link_libraries(smart_car_tf 
     ${catkin_LIBRARIES}
 )
 
