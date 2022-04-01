@@ -233,7 +233,7 @@ void smart_car_controller::ImuDataPublish(const int16 * gypo, const ros::Time &t
     pub_msg.orientation.z = Quat_z;
     pub_msg.orientation_covariance = {1, 0, 0,
                                       0, 1, 0,
-                                      0, 0, 1e-4
+                                      0, 0, 1e-1
 
     };
 
@@ -242,16 +242,16 @@ void smart_car_controller::ImuDataPublish(const int16 * gypo, const ros::Time &t
     pub_msg.angular_velocity.z = YawVel;
     pub_msg.angular_velocity_covariance = {1, 0, 0,
                                            0, 1, 0,
-                                           0, 0, 1e-4
+                                           0, 0, 1e-1
 
     };
 
     pub_msg.linear_acceleration.x = XAcc;
     pub_msg.linear_acceleration.y = YAcc;
     pub_msg.linear_acceleration.z = ZAcc;
-    pub_msg.linear_acceleration_covariance = {1e-4, 0, 0,
-                                              0, 1e-4, 0,
-                                              0, 0, 1e-4
+    pub_msg.linear_acceleration_covariance = {1e-1, 0, 0,
+                                              0, 1e-1, 0,
+                                              0, 0, 1e-1
 
     };
     imu_pub.publish(pub_msg);
@@ -265,7 +265,7 @@ void smart_car_controller::encoderDataPublish(const int16 & vel, const ros::Time
     pub_msg.header.stamp = timeStamp;
     pub_msg.header.frame_id = "base_link";
     pub_msg.twist.twist.linear.x = XVel;
-    pub_msg.twist.covariance = {1e-2,0,0,0,0,0,
+    pub_msg.twist.covariance = {1e-1,0,0,0,0,0,
                                 0,1,0,0,0,0,
                                 0,0,1,0,0,0,
                                 0,0,0,1,0,0,
