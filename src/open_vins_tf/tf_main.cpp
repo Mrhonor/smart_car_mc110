@@ -1,40 +1,38 @@
 #include <ros/ros.h>
-#include <tf2_ros/static_transform_broadcaster.h>
-#include <geometry_msgs/TransformStamped.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <turtlesim/Pose.h>
+
+std::string turtle_name;
+
+void poseCallback(const turtlesim::PoseConstPtr& msg){
+  static tf2_ros::TransformBroadcaster br;
+  geometry_msgs::TransformStamped transformStamped;
+  
+  transformStamped.header.stamp = ros::Time::now();
+  transformStamped.header.frame_id = "world";
+  transformStamped.child_frame_id = turtle_name;
+  transformStamped.transform.translation.x = msg->x;
+  transformStamped.transform.translation.y = msg->y;
+  transformStamped.transform.translation.z = 0.0;
+  tf2::Quaternion q;
+  q.setRPY(0, 0, msg->theta);
+  transformStamped.transform.rotation.x = q.x();
+  transformStamped.transform.rotation.y = q.y();
+  transformStamped.transform.rotation.z = q.z();
+  transformStamped.transform.rotation.w = q.w();
+
+  br.sendTransform(transformStamped);
+}
+
+int main(int argc, char** argv){
+  ros::init(argc, argv, "open_vins");
 
 
-std::string static_turtle_name;
+  ros::NodeHandle node;
+  ros::Subscriber sub = node.subscribe(turtle_name+"/pose", 10, &poseCallback);
 
-int main(int argc, char **argv)
-{
-  ros::init(argc,argv, "open_vins_tf"); //初始化ros节点
-  
-  
-  static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-  
-  geometry_msgs::TransformStamped static_transformStamped; // 声明转换信息
-
-  // 赋值 转换信息
-  static_transformStamped.header.stamp = ros::Time::now();
-  static_transformStamped.header.frame_id = "odom";
-  static_transformStamped.child_frame_id = "global";
-  static_transformStamped.transform.translation.x = 0;
-  static_transformStamped.transform.translation.y = 0;
-  static_transformStamped.transform.translation.z = 0;
-  tf2::Quaternion quat;
-  quat.setRPY(0, 0, -3.1415926 / 2);
-  static_transformStamped.transform.rotation.x = quat.x();
-  static_transformStamped.transform.rotation.y = quat.y();
-  static_transformStamped.transform.rotation.z = quat.z();
-  static_transformStamped.transform.rotation.w = quat.w();
-
-  
-  // 通过  StaticTransformBroadcaster  把 转换信息发送出去
-  static_broadcaster.sendTransform(static_transformStamped);
-  
-  // 终端 显示
-  ROS_INFO("Spinning until killed publishing global to world");
   ros::spin();
   return 0;
 };
