@@ -45,8 +45,9 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 
     integrator = new Integrator(jsonConfig["Ts"],json_paths);
     // x0 = {0, 0,0,jsonConfig["v0"],0,0,0,0.5,0,jsonConfig["v0"]};
-    x0 = {0, 0,0,0,0,0,0,0,0,0};
+    x0 = {0, 0,0,0,0,0,0,0,0,0.02};
     Ts = jsonConfig["Ts"];
+    
     TempSimuEnd = 0;
 
     u0.setZero();
@@ -59,6 +60,9 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 }
 
 smart_car_controller::~smart_car_controller(){
+    ControlState.TargetVelocity = 0;
+    comUart->uartTxHandle(ControlState);
+    ros::Duration(0.5).sleep();
     delete comUart;
     delete integrator;
 }
@@ -66,6 +70,8 @@ smart_car_controller::~smart_car_controller(){
 void smart_car_controller::controllerThreadHandle(){
     SRealDataStru data;
     data.Init();
+    // 等待ros节点初始化完
+    ros::Duration(1).sleep();
     trackPublish();
     while (ros::ok())
     {
@@ -81,15 +87,25 @@ void smart_car_controller::controllerThreadHandle(){
         x0.D += u0.dD * dt;
         x0.delta += u0.dDelta * dt;
         x0.vs += u0.dVs * dt;
+        if(x0.D > 0.1) x0.D = 0.1;
+        if(x0.D < -0.1) x0.D = -0.1;
+
+        if(x0.delta > 0.4) x0.delta = 0.4;
+        if(x0.delta < -0.4) x0.delta = -0.4;
 
         if(x0.D > 0.05)       ControlState.TargetVelocity = x0.D * 0.75 + 0.25;
         else if(x0.D < -0.05) ControlState.TargetVelocity = x0.D * 0.75 - 0.25;
         else                  ControlState.TargetVelocity = 0;
 
-        ControlState.TargetAngle = x0.delta;
+        ControlState.TargetAngle = -x0.delta * 180 / 3.1415;
 
         // 防止跑出去
         if(x0.X < 1.5 && x0.Y < 1.1) comUart->uartTxHandle(ControlState);
+        else{
+            ControlState.TargetVelocity = 0;
+            ControlState.TargetAngle = 0;
+            comUart->uartTxHandle(ControlState);
+        }
             
         LastTxTime = curTime;
 
@@ -151,24 +167,6 @@ void smart_car_controller::trackPublish(){
     
     reference_path_pub_.publish(ref_msg);
 
-    // ros::Duration(1).sleep();
-    // statePublish();
-    // nav_msgs::Odometry msg;
-    // msg.header.seq = 0;
-    // msg.header.stamp = ros::Time::now();
-    // msg.header.frame_id = "odom";
-    // msg.child_frame_id = "base_link";
-    // msg.pose.pose.position.x = 2.5;
-    // msg.pose.pose.position.y = 0;
-    // msg.pose.pose.orientation.x = 0;
-    // msg.pose.pose.orientation.y = 0;
-    // msg.pose.pose.orientation.z = 0;
-    // msg.pose.pose.orientation.w = 1;
-    // msg.twist.twist.linear.x = 2;
-    // msg.twist.twist.linear.y = 0;
-    // msg.twist.twist.angular.z = 0;
-    // ros::Duration(1).sleep();
-    // state_pub_.publish(msg);
 }
 
 void smart_car_controller::statePublish(){
