@@ -19,7 +19,7 @@
 
 #include "config.h"
 #include "types.h"
-#include "Params/params.h"
+#include "params.h"
 namespace mpcc{
 //Return
 struct LinModelMatrix {

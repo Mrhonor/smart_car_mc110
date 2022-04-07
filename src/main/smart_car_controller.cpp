@@ -78,13 +78,13 @@ void smart_car_controller::controllerThreadHandle(){
 
         ros::Time curTime = ros::Time::now();
         double dt = (curTime.toSec() - LastTxTime.toSec());
-        x0.D += u0.dD * dt;
+        // x0.D += u0.dD * dt;
         x0.delta += u0.dDelta * dt;
         x0.vs += u0.dVs * dt;
 
-        if(x0.D > 0.05)       ControlState.TargetVelocity = x0.D * 0.75 + 0.25;
-        else if(x0.D < -0.05) ControlState.TargetVelocity = x0.D * 0.75 - 0.25;
-        else                  ControlState.TargetVelocity = 0;
+        // if(x0.D > 0.05)       ControlState.TargetVelocity = x0.D * 0.75 + 0.25;
+        // else if(x0.D < -0.05) ControlState.TargetVelocity = x0.D * 0.75 - 0.25;
+        // else                  ControlState.TargetVelocity = 0;
 
         ControlState.TargetAngle = x0.delta;
 
@@ -196,7 +196,9 @@ void smart_car_controller::mpccControlCallback(const std_msgs::Float64MultiArray
     u0.dD = msg->data[0];
     u0.dDelta = msg->data[1];
     u0.dVs = msg->data[2];
-    // x0 = integrator->simTimeStep(x0, u0, Ts);
+    State RK4_X = integrator->simTimeStep(x0, u0, Ts);
+    x0.D = RK4_X.D;
+    ControlState.TargetVelocity = RK4_X.vx;
     // statePublish();
 }
 
