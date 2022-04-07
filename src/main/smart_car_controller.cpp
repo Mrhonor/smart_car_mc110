@@ -29,11 +29,11 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
     imu_pub = n.advertise<sensor_msgs::Imu>("/smart_car_mc110/imu_data", 10);
 
     control_sub_ = n.subscribe("/MPCC/Control", 10, &smart_car_controller::mpccControlCallback, this);
-    ekf_sub = n.subscribe("/odometry/filtered", 10, &smart_car_controller::ekfCallback, this);
+    ekf_sub = n.subscribe("/ov_msckf/odomimu", 10, &smart_car_controller::ekfCallback, this);
 
     cmd_vel_sub  = n.subscribe("cmd_vel",     100, &smart_car_controller::Cmd_Vel_Callback, this); 
 
-    ifstream iConfig("/home/firefly/robot_ws/src/MPCC/Params/config.json");
+    ifstream iConfig("/home/mr/robot_ws/src/MPCC/Params/config.json");
     json jsonConfig;
     iConfig >> jsonConfig;
 
@@ -285,8 +285,8 @@ void smart_car_controller::encoderDataPublish(const int16 & vel, const ros::Time
 }
 
 void smart_car_controller::ekfCallback(const nav_msgs::OdometryConstPtr& msg){
-    x0.X = msg->pose.pose.position.x;
-    x0.Y = msg->pose.pose.position.y;
+    x0.X = msg->pose.pose.position.y;
+    x0.Y = -msg->pose.pose.position.x;
 
     tf::Quaternion quat;
     tf::quaternionMsgToTF(msg->pose.pose.orientation, quat);
@@ -295,8 +295,8 @@ void smart_car_controller::ekfCallback(const nav_msgs::OdometryConstPtr& msg){
     double roll, pitch, yaw;//定义存储r\p\y的容器
     tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
     x0.phi = yaw;
-    x0.vx = msg->twist.twist.linear.x;
-    x0.vy = msg->twist.twist.linear.y;
+    x0.vx = msg->twist.twist.linear.y;
+    x0.vy = -msg->twist.twist.linear.x;
     x0.r = msg->twist.twist.angular.z;
     statePublish();
 }
