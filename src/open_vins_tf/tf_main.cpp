@@ -1,35 +1,37 @@
 #include <ros/ros.h>
-#include <sensor_msgs/Imu.h>
-#include <Eigen/Dense>
-#include <unsupported/Eigen/MatrixFunctions>
-#include <cmath>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <turtlesim/Pose.h>
 
+std::string turtle_name;
 
-ros::Publisher pub;
+void poseCallback(const turtlesim::PoseConstPtr& msg){
+  static tf2_ros::TransformBroadcaster br;
+  geometry_msgs::TransformStamped transformStamped;
+  
+  transformStamped.header.stamp = ros::Time::now();
+  transformStamped.header.frame_id = "world";
+  transformStamped.child_frame_id = turtle_name;
+  transformStamped.transform.translation.x = msg->x;
+  transformStamped.transform.translation.y = msg->y;
+  transformStamped.transform.translation.z = 0.0;
+  tf2::Quaternion q;
+  q.setRPY(0, 0, msg->theta);
+  transformStamped.transform.rotation.x = q.x();
+  transformStamped.transform.rotation.y = q.y();
+  transformStamped.transform.rotation.z = q.z();
+  transformStamped.transform.rotation.w = q.w();
 
-void poseCallback(const sensor_msgs::ImuConstPtr& msg){
-  Eigen::Matrix<double,3,3> R;
-  Eigen::Matrix<double,3,1> V;
-  R << 0.999, 0.0312, 0.0316,
-       0.0312, 0.0122, -0.9994,
-       -0.0316, 0.9994, 0.0112;
-  V << msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z;
-  V = R*V;
-  sensor_msgs::Imu pub_msg;
-  pub_msg.linear_acceleration.x = V(0,0);
-  pub_msg.linear_acceleration.y = V(1,0);
-  pub_msg.linear_acceleration.z = V(2,0);
-  pub.publish(pub_msg);
+  br.sendTransform(transformStamped);
 }
-
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "open_vins");
 
 
   ros::NodeHandle node;
-  ros::Subscriber sub = node.subscribe("/camera/imu", 10, &poseCallback);
-  pub = node.advertise<sensor_msgs::Imu>("/imu", 10);
+  ros::Subscriber sub = node.subscribe(turtle_name+"/pose", 10, &poseCallback);
 
   ros::spin();
   return 0;

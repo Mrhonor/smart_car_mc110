@@ -49,8 +49,6 @@ private:
 
     double Ts;
     int TempSimuEnd;
-    double MaxD;
-    double MinD;
 
 public:
 
