@@ -14,6 +14,7 @@
 #include "std_msgs/Float64MultiArray.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/Twist.h"
+#include <string>
 
 // simulation
 using namespace mpcc;
@@ -56,7 +57,7 @@ public:
     ~smart_car_controller();
     
     // simulation
-    void trackPublish();
+    void trackPublish(std::string filePath);
     void statePublish();
     void mpccControlCallback(const std_msgs::Float64MultiArrayConstPtr&);
     void ekfCallback(const nav_msgs::OdometryConstPtr&);
