@@ -71,7 +71,9 @@ void smart_car_controller::controllerThreadHandle(){
     SRealDataStru data;
     data.Init();
     ros::Duration(1).sleep();
+
     trackPublish("/home/firefly/robot_ws/src/smart_car_mc110/track.json");
+
     while (ros::ok())
     {
         
@@ -92,10 +94,12 @@ void smart_car_controller::controllerThreadHandle(){
         // else                  ControlState.TargetVelocity = 0;
 
         ControlState.TargetAngle = -u0.dDelta * 180 / 3.14159;
-        ControlState.TargetVelocity = 0.7;
+        ControlState.TargetVelocity = 0.5;
 
         // 防止跑出去
+
         if(x0.X > 2.0 || x0.Y > 1.6) ControlState.TargetVelocity = 0;
+
         comUart->uartTxHandle(ControlState);
             
         LastTxTime = curTime;
@@ -112,10 +116,10 @@ void smart_car_controller::trackPublish(std::string filePath){
     iTrack >> jsonTrack;
     std::vector<double> x_center = jsonTrack["X"];
     std::vector<double> y_center = jsonTrack["Y"];
-    std::vector<double> x_in = jsonTrack["X_in"];
-    std::vector<double> y_in = jsonTrack["Y_in"];
-    std::vector<double> x_out = jsonTrack["X_out"];
-    std::vector<double> y_out = jsonTrack["Y_out"];
+    std::vector<double> x_in = jsonTrack["X_i"];
+    std::vector<double> y_in = jsonTrack["Y_i"];
+    std::vector<double> x_out = jsonTrack["X_o"];
+    std::vector<double> y_out = jsonTrack["Y_o"];
 
 
     std_msgs::Float64MultiArray ref_msg;
