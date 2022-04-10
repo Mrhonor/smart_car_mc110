@@ -8,13 +8,16 @@
 ros::Publisher pub;
 
 void poseCallback(const sensor_msgs::ImuConstPtr& msg){
-  Eigen::Matrix<double,3,3> R;
+  Eigen::Matrix<double,3,3> R1, R2;
   Eigen::Matrix<double,3,1> V;
-  R << 0.999, 0.0312, 0.0316,
-       0.0312, 0.0122, -0.9994,
-       -0.0316, 0.9994, 0.0112;
+  R1 << 0.9986, 0.0371, -0.0367,
+       0.0371, -0.0119, 0.9992,
+       0.0367, -0.9992, -0.0132;
+  R2 <<  0.0351,    0.9994,         0,
+        -0.9994,    0.0351,         0,
+         0,         0,    1.0000;
   V << msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z;
-  V = R*V;
+  V = R2*R1*V;
   sensor_msgs::Imu pub_msg;
   pub_msg.linear_acceleration.x = V(0,0);
   pub_msg.linear_acceleration.y = V(1,0);
