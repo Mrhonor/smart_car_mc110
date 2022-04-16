@@ -1,4 +1,10 @@
 <launch>
-  <node pkg="smart_car_mc110" type="smart_car_main" name="mc110_main" output="screen"/>
+  <node pkg="smart_car_mc110" type="smart_car_main" name="mc110_main" output="screen">
+    <param name = "configPath" type = "string" value = "$(find mpcc)/Params/config.json" />
+    <param name = "trackMode" type = "string" value = "eight" />
+    <param name = "trackPath1" type = "string" value = "$(find smart_car_mc110)/track_eight1.json" />
+    <param name = "trackPath2" type = "string" value = "$(find smart_car_mc110)/track_eight2.json" />
+  </node>
   <node pkg="tf2_ros" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 -0.707 0.707 link1_parent link1" />
+  <node pkg="smart_car_mc110" type="smart_car_uwb" name="uwb" />
 </launch>

@@ -34,7 +34,16 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 
     cmd_vel_sub  = n.subscribe("cmd_vel",     100, &smart_car_controller::Cmd_Vel_Callback, this); 
 
-    ifstream iConfig("/home/firefly/robot_ws/src/MPCC/Params/config.json");
+    curMode = "path1";
+    ros::param::get("~configPath", configPath);
+    ros::param::get("~trackMode", trackMode);
+    ros::param::get("~trackPath1", trackPath1);
+    ros::param::get("~trackPath2", trackPath2);
+
+
+    ROS_INFO_STREAM("config path:" << configPath);
+
+    ifstream iConfig(configPath);
     json jsonConfig;
     iConfig >> jsonConfig;
 
@@ -60,6 +69,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 }
 
 smart_car_controller::~smart_car_controller(){
+    ros::Duration(0.2).sleep();
     ControlState.TargetVelocity = 0;
     comUart->uartTxHandle(ControlState);
     ros::Duration(1).sleep();
@@ -72,7 +82,7 @@ void smart_car_controller::controllerThreadHandle(){
     data.Init();
     ros::Duration(1).sleep();
 
-    trackPublish("/home/firefly/robot_ws/src/smart_car_mc110/track.json");
+    trackPublish(trackPath1);
 
     while (ros::ok())
     {
@@ -93,12 +103,29 @@ void smart_car_controller::controllerThreadHandle(){
         // else if(x0.D < -0.05) ControlState.TargetVelocity = x0.D * 0.75 - 0.25;
         // else                  ControlState.TargetVelocity = 0;
 
-        ControlState.TargetAngle = -u0.dDelta * 180 / 3.14159;
+        if(trackMode == "eight"){
+            if(curMode == "path1" && x0.X > 3.5){
+                curMode = "path2_s";
+                trackPublish(trackPath2);
+            }
+            else if(curMode == "path2_s" && x0.X > 5.5){
+                curMode = "path2";
+            }
+            else if(curMode == "path2" && x0.X < 4.5){
+                curMode = "path1_s";
+                trackPublish(trackPath1);
+            }
+            else if(curMode == "path1_s" && x0.X < 2){
+                curMode = "path1";
+            }
+        }
+
+        ControlState.TargetAngle = -u0.dDelta * 180 / 3.14159;  
         ControlState.TargetVelocity = 0.5;
 
         // 防止跑出去
 
-        if(x0.X > 2.0 || x0.Y > 1.6) ControlState.TargetVelocity = 0;
+        ControlState.TargetVelocity = 0;
 
         comUart->uartTxHandle(ControlState);
             

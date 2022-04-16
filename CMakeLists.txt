@@ -16,6 +16,26 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+add_message_files(
+  DIRECTORY msg
+  FILES
+  hedge_pos.msg
+  hedge_pos_a.msg
+  hedge_pos_ang.msg
+  beacon_pos_a.msg
+  hedge_imu_raw.msg
+  hedge_imu_fusion.msg
+  beacon_distance.msg
+  hedge_telemetry.msg
+  hedge_quality.msg
+  marvelmind_waypoint.msg
+)
+
+generate_messages(
+   DEPENDENCIES
+  std_msgs
+)
+
 find_package(OpenCV REQUIRED)
 
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
@@ -101,4 +121,15 @@ target_link_libraries(smart_car_tf
     ${catkin_LIBRARIES}
 )
 
+add_executable(smart_car_uwb
+    src/uwb/uwb_main.cpp
+)
+add_dependencies(smart_car_uwb ${${PROJECT_NAME}_EXPORTTED_TARGETS}
+                                   ${catkin_EXPORTED_TARGETS}
+                                   smart_car_mc110_generate_messages_cpp
+                                   )
+
+target_link_libraries(smart_car_uwb 
+    ${catkin_LIBRARIES}
+)
 

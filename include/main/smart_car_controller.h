@@ -18,10 +18,16 @@
 
 // simulation
 using namespace mpcc;
+using namespace std;
 
 class smart_car_controller
 {
 private:
+    string trackPath1;
+    string trackPath2;
+    string trackMode;
+    string configPath;
+    string curMode;
 
     smart_car_communicator* comUart;
     
