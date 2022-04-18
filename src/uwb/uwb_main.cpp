@@ -20,7 +20,10 @@
 ros::Publisher pose_pub, imu_pub, position_pub;
 int imuFusionSeq = 0, imuRawSeq = 0, uwbPoseSeq = 0;
 double gyro_x = 0, gyro_y = 0, gyro_z = 0;
-
+double last_gx = 0, last_gy = 0, last_gz = 0;
+// double integrate_yaw = 0;
+double YawError = 0;
+ros::Time lastTime;
 
 void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     ros::Time timeStamp = ros::Time::now();
@@ -46,10 +49,13 @@ void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     // roll = pitch;
     // pitch = temp;
 
-    yaw = -yaw;
+    // yaw = -yaw;
 
+    yaw -= (YawError * pi / 180);
+    while(yaw > pi) yaw -= 2*pi;
+    while(yaw < -pi) yaw += 2*pi;
 
-    // ROS_INFO("yaw : %lf", yaw*180/pi);
+    ROS_INFO("yaw : %lf", yaw*180/pi);
 
     q.setEuler(yaw,pitch,roll); // yaw picth roll
     geometry_msgs::PoseWithCovarianceStamped pub_msg;
@@ -85,10 +91,14 @@ void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
     double g_y = (msg->gyro_y + 85.342666) * GYROLSB;
     double g_z = (msg->gyro_z + 26.876709) * GYROLSB;
 
-
-    // gyro_x = gyro_x * (imuRawSeq / (imuRawSeq + 1.0)) + g_x / (imuRawSeq + 1);
-    // gyro_y = gyro_y * (imuRawSeq / (imuRawSeq + 1.0)) + g_y / (imuRawSeq + 1);
-    // gyro_z = gyro_z * (imuRawSeq / (imuRawSeq + 1.0)) + g_z / (imuRawSeq + 1);
+    double dt = (timeStamp.toSec() - lastTime.toSec());
+    lastTime = timeStamp;
+    gyro_x += last_gx * dt;
+    gyro_y += last_gy * dt;
+    gyro_z += last_gz * dt;
+    last_gx = g_x;
+    last_gy = g_y;
+    last_gz = g_z;
 
     // ROS_INFO("acc_x: %lf, acc_y :%lf, acc_z : %lf", acc_x, acc_y, acc_z);
 
@@ -105,7 +115,8 @@ void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
 
     Acc = Sz*R1*Sz*Acc;
     Gyro = Sz*R1*Sz*Gyro;
-    ROS_INFO("gyro_x: %lf, gyro_y :%lf, gyro_z : %lf", Gyro(0,0), Gyro(1,0), Gyro(2,0));
+    ROS_INFO("roll_velocity: %lf, pitch_velocity :%lf, yaw_velocity : %lf", Gyro(0,0), Gyro(1,0), Gyro(2,0));
+    ROS_INFO("integrate_roll: %lf, integrate_pitch :%lf, integrate_yaw : %lf", gyro_x, gyro_y, gyro_z);
 
     sensor_msgs::Imu pub_msg;
     pub_msg.header.frame_id = "base_link";
@@ -118,9 +129,9 @@ void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
     pub_msg.linear_acceleration_covariance = {1e-3,0,0,
                                               0,1e-3,0,
                                               0,0,1e-3};
-    pub_msg.angular_velocity.x = Gyro(0,0);
-    pub_msg.angular_velocity.y = Gyro(1,0);
-    pub_msg.angular_velocity.z = Gyro(2,0);
+    pub_msg.angular_velocity.x = Gyro(0,0) * pi / 180;
+    pub_msg.angular_velocity.y = Gyro(1,0) * pi / 180;
+    pub_msg.angular_velocity.z = Gyro(2,0) * pi / 180;
     pub_msg.linear_acceleration_covariance = {1e-3,0,0,
                                               0,1e-3,0,
                                               0,0,1e-3};
@@ -153,8 +164,9 @@ void uwbPositionCallback(const smart_car_mc110::hedge_pos_angConstPtr& msg){
 int main(int argc, char** argv){
     ros::init(argc, argv, "uwb");
 
-
     ros::NodeHandle node;
+
+    
     ros::Subscriber orientation_sub = node.subscribe("/hedge_imu_fusion", 10, &imuFusionCallback);
     ros::Subscriber imu_sub = node.subscribe("/hedge_imu_raw", 10, &imuRawCallback);
     ros::Subscriber position_sub = node.subscribe("/hedge_pos_ang", 10, &uwbPositionCallback);
@@ -162,6 +174,9 @@ int main(int argc, char** argv){
     pose_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/orientation",10);
     imu_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu", 10);
     position_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/position", 10);
+
+    lastTime = ros::Time::now();
+    ros::param::get("~YawError", YawError);
 
     ros::spin();
     
