@@ -17,7 +17,7 @@
 #define ACCLSB 0.01
 #define GYROLSB 0.0175
 
-ros::Publisher pose_pub, imu_pub, position_pub;
+ros::Publisher pose_pub, imu_pub, position_pub, imu_fusion_pub;
 int imuFusionSeq = 0, imuRawSeq = 0, uwbPoseSeq = 0;
 double gyro_x = 0, gyro_y = 0, gyro_z = 0;
 double last_gx = 0, last_gy = 0, last_gz = 0;
@@ -64,15 +64,62 @@ void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     pub_msg.header.seq = imuFusionSeq;
     imuFusionSeq++;
     pub_msg.header.frame_id = "odom";
-    pub_msg.pose.covariance = {1,0,0,0,0,0,
-                               0,1,0,0,0,0,
-                               0,0,1,0,0,0,
+    pub_msg.pose.covariance = {1e-3,0,0,0,0,0,
+                               0,1e-3,0,0,0,0,
+                               0,0,1e-3,0,0,0,
                                0,0,0,1e-3,0,0,
                                0,0,0,0,1e-3,0,
                                0,0,0,0,0,1e-3};
-                            
+    pub_msg.pose.pose.position.x = msg->x_m;                        
+    pub_msg.pose.pose.position.y = msg->y_m;                        
+    pub_msg.pose.pose.position.z = msg->z_m;                        
     pub_msg.pose.pose.orientation = tf2::toMsg(q);
     pose_pub.publish(pub_msg);
+
+    double acc_x = msg->ax;
+    double acc_y = msg->ay;
+    double acc_z = msg->az;
+
+
+    // deduct system error
+    double g_x = msg->vx;
+    double g_y = msg->vy;
+    double g_z = msg->vz;
+
+    Eigen::Matrix<double,3,3> R1, Sz;
+    Eigen::Matrix<double,3,1> Acc, Gyro;
+    R1 << 0, -1, 0,
+        1, 0, 0,
+        0, 0, 1;
+    Sz <<  1,    0,     0,
+           0,    -1,    0,
+           0,     0,    1;
+    Acc << acc_x, acc_y, acc_z;
+    Gyro << g_x, g_y, g_z;
+
+    Acc = Sz*R1*Sz*Acc;
+    Gyro = Sz*R1*Sz*Gyro;
+
+
+    sensor_msgs::Imu imu_msg;
+    imu_msg.header.frame_id = "base_link";
+    imu_msg.header.seq = imuFusionSeq;
+    imu_msg.header.stamp = timeStamp;
+    imuRawSeq++;
+    imu_msg.linear_acceleration.x = Acc(0,0);
+    imu_msg.linear_acceleration.y = Acc(1,0);
+    imu_msg.linear_acceleration.z = Acc(2,0);
+    imu_msg.linear_acceleration_covariance = {1e-3,0,0,
+                                              0,1e-3,0,
+                                              0,0,1e-3};
+    imu_msg.angular_velocity.x = Gyro(0,0);
+    imu_msg.angular_velocity.y = Gyro(1,0);
+    imu_msg.angular_velocity.z = Gyro(2,0);
+    imu_msg.linear_acceleration_covariance = {1e-3,0,0,
+                                              0,1e-3,0,
+                                              0,0,1e-3};
+
+    imu_fusion_pub.publish(imu_msg);
 }
 
 void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
@@ -173,7 +220,9 @@ int main(int argc, char** argv){
 
     pose_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/orientation",10);
     imu_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu", 10);
+    imu_fusion_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu_fusion", 10);
     position_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/position", 10);
+    // pose_fusion_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/pose",10);
 
     lastTime = ros::Time::now();
     ros::param::get("~YawError", YawError);
