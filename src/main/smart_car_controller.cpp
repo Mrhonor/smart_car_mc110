@@ -83,6 +83,7 @@ void smart_car_controller::controllerThreadHandle(){
     ros::Duration(1).sleep();
 
     trackPublish(trackPath1);
+    ros::Time staTime = ros::Time::now();
 
     while (ros::ok())
     {
@@ -119,13 +120,14 @@ void smart_car_controller::controllerThreadHandle(){
                 curMode = "path1";
             }
         }
-
+        
         ControlState.TargetAngle = -u0.dDelta * 180 / 3.14159;  
         ControlState.TargetVelocity = 0.5;
-
-        // 防止跑出去
-
-        ControlState.TargetVelocity = 0;
+        
+        if(trackMode == "debug" && (curTime.toSec() - staTime.toSec())>3){
+            ControlState.TargetVelocity = 0;
+            ROS_WARN("Debug!Stop!");
+        }
 
         comUart->uartTxHandle(ControlState);
             
