@@ -3,6 +3,7 @@
 #include "smart_car_mc110/hedge_imu_fusion.h"
 #include "smart_car_mc110/hedge_pos_ang.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -58,12 +59,13 @@ void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     ROS_INFO("yaw : %lf", yaw*180/pi);
 
     q.setEuler(yaw,pitch,roll); // yaw picth roll
-    geometry_msgs::PoseWithCovarianceStamped pub_msg;
+    nav_msgs::Odometry pub_msg;
     
     pub_msg.header.stamp = timeStamp;
     pub_msg.header.seq = imuFusionSeq;
     imuFusionSeq++;
     pub_msg.header.frame_id = "odom";
+    pub_msg.child_frame_id = "base_link";
     pub_msg.pose.covariance = {1e-3,0,0,0,0,0,
                                0,1e-3,0,0,0,0,
                                0,0,1e-3,0,0,0,
@@ -74,7 +76,8 @@ void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     pub_msg.pose.pose.position.y = msg->y_m;                        
     pub_msg.pose.pose.position.z = msg->z_m;                        
     pub_msg.pose.pose.orientation = tf2::toMsg(q);
-    pose_pub.publish(pub_msg);
+
+
 
     double acc_x = msg->ax;
     double acc_y = msg->ay;
@@ -101,23 +104,34 @@ void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     Gyro = Sz*R1*Sz*Gyro;
 
 
+    pub_msg.twist.twist.linear.x = Gyro(0,0);
+    pub_msg.twist.twist.linear.y = Gyro(1,0);
+    pub_msg.twist.twist.linear.z = Gyro(2,0);
+    pub_msg.twist.covariance = {1e-3,0,0,0,0,0,
+                               0,1e-3,0,0,0,0,
+                               0,0,1e-3,0,0,0,
+                               0,0,0,1e-3,0,0,
+                               0,0,0,0,1e-3,0,
+                               0,0,0,0,0,1e-3};
+
+    pose_pub.publish(pub_msg);
+
     sensor_msgs::Imu imu_msg;
     imu_msg.header.frame_id = "base_link";
     imu_msg.header.seq = imuFusionSeq;
     imu_msg.header.stamp = timeStamp;
-    imuRawSeq++;
     imu_msg.linear_acceleration.x = Acc(0,0);
     imu_msg.linear_acceleration.y = Acc(1,0);
     imu_msg.linear_acceleration.z = Acc(2,0);
     imu_msg.linear_acceleration_covariance = {1e-3,0,0,
                                               0,1e-3,0,
                                               0,0,1e-3};
-    imu_msg.angular_velocity.x = Gyro(0,0);
-    imu_msg.angular_velocity.y = Gyro(1,0);
-    imu_msg.angular_velocity.z = Gyro(2,0);
-    imu_msg.linear_acceleration_covariance = {1e-3,0,0,
-                                              0,1e-3,0,
-                                              0,0,1e-3};
+    // imu_msg.angular_velocity.x = Gyro(0,0);
+    // imu_msg.angular_velocity.y = Gyro(1,0);
+    // imu_msg.angular_velocity.z = Gyro(2,0);
+    // imu_msg.linear_acceleration_covariance = {1e-3,0,0,
+    //                                           0,1e-3,0,
+    //                                           0,0,1e-3};
 
     imu_fusion_pub.publish(imu_msg);
 }
@@ -218,7 +232,7 @@ int main(int argc, char** argv){
     ros::Subscriber imu_sub = node.subscribe("/hedge_imu_raw", 10, &imuRawCallback);
     ros::Subscriber position_sub = node.subscribe("/hedge_pos_ang", 10, &uwbPositionCallback);
 
-    pose_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/orientation",10);
+    pose_pub = node.advertise<nav_msgs::Odometry>("/uwb/odom",10);
     imu_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu", 10);
     imu_fusion_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu_fusion", 10);
     position_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/position", 10);
