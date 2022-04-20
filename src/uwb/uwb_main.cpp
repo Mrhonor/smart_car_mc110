@@ -18,7 +18,7 @@
 #define ACCLSB 0.01
 #define GYROLSB 0.0175
 
-ros::Publisher pose_pub, imu_pub, position_pub, imu_fusion_pub;
+ros::Publisher pose_pub, imu_pub, position_pub, imu_fusion_pub, orient_pub;
 int imuFusionSeq = 0, imuRawSeq = 0, uwbPoseSeq = 0;
 double gyro_x = 0, gyro_y = 0, gyro_z = 0;
 double last_gx = 0, last_gy = 0, last_gz = 0;
@@ -56,9 +56,9 @@ void imuFusionCallback(const smart_car_mc110::hedge_imu_fusionConstPtr& msg){
     while(yaw > pi) yaw -= 2*pi;
     while(yaw < -pi) yaw += 2*pi;
 
-    ROS_INFO("yaw : %lf", yaw*180/pi);
+    // ROS_INFO("yaw : %lf", yaw*180/pi);
 
-    q.setEuler(yaw,pitch,roll); // yaw picth roll
+    q.setRPY(roll,pitch,yaw); 
     nav_msgs::Odometry pub_msg;
     
     pub_msg.header.stamp = timeStamp;
@@ -142,15 +142,38 @@ void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
     double acc_y = msg->acc_y * ACCLSB;
     double acc_z = msg->acc_z * ACCLSB;
 
-    // double g_x = msg->gyro_x * GYROLSB;
-    // double g_y = msg->gyro_y * GYROLSB;
-    // double g_z = msg->gyro_z * GYROLSB;
+    // double g_x = msg->gyro_x ;
+    // double g_y = msg->gyro_y ;
+    // double g_z = msg->gyro_z ;
 
 
     // deduct system error
-    double g_x = (msg->gyro_x - 56.563589) * GYROLSB;
-    double g_y = (msg->gyro_y + 85.342666) * GYROLSB;
-    double g_z = (msg->gyro_z + 26.876709) * GYROLSB;
+    double g_x = (msg->gyro_x + 88.131) * GYROLSB;
+    double g_y = (msg->gyro_y - 105.784) * GYROLSB;
+    double g_z = (msg->gyro_z - 156.690) * GYROLSB;
+
+    // gyro_x = gyro_x * (imuRawSeq / (imuRawSeq + 1.0)) + g_x / (imuRawSeq + 1);
+    // gyro_y = gyro_y * (imuRawSeq / (imuRawSeq + 1.0)) + g_y / (imuRawSeq + 1);
+    // gyro_z = gyro_z * (imuRawSeq / (imuRawSeq + 1.0)) + g_z / (imuRawSeq + 1);
+
+    // ROS_INFO("gyro_x: %lf, gyro_y :%lf, gyro_z : %lf", gyro_x, gyro_y, gyro_z);
+
+    double c_x = msg->compass_x+120;
+    double c_y = msg->compass_y;
+    double c_z = msg->compass_z;
+
+    double yaw = atan2(c_y, c_x);
+    if(yaw > 0){
+        yaw -= pi;
+    }
+    else if(yaw < 0){
+        yaw += pi;
+    }
+    yaw = -yaw;
+    ROS_INFO("yaw : %lf", yaw*180/pi);
+
+    tf2::Quaternion q;
+    q.setRPY(0,0,yaw); 
 
     double dt = (timeStamp.toSec() - lastTime.toSec());
     lastTime = timeStamp;
@@ -176,7 +199,7 @@ void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
 
     Acc = Sz*R1*Sz*Acc;
     Gyro = Sz*R1*Sz*Gyro;
-    ROS_INFO("roll_velocity: %lf, pitch_velocity :%lf, yaw_velocity : %lf", Gyro(0,0), Gyro(1,0), Gyro(2,0));
+    // ROS_INFO("roll_velocity: %lf, pitch_velocity :%lf, yaw_velocity : %lf", Gyro(0,0), Gyro(1,0), Gyro(2,0));
     ROS_INFO("integrate_roll: %lf, integrate_pitch :%lf, integrate_yaw : %lf", gyro_x, gyro_y, gyro_z);
 
     sensor_msgs::Imu pub_msg;
@@ -193,11 +216,23 @@ void imuRawCallback(const smart_car_mc110::hedge_imu_rawConstPtr& msg){
     pub_msg.angular_velocity.x = Gyro(0,0) * pi / 180;
     pub_msg.angular_velocity.y = Gyro(1,0) * pi / 180;
     pub_msg.angular_velocity.z = Gyro(2,0) * pi / 180;
-    pub_msg.linear_acceleration_covariance = {1e-3,0,0,
+    pub_msg.angular_velocity_covariance = {1e-3,0,0,
                                               0,1e-3,0,
                                               0,0,1e-3};
 
-    imu_pub.publish(pub_msg);
+    geometry_msgs::PoseWithCovarianceStamped pose_msg;
+
+    pose_msg.header.stamp = timeStamp;
+    pose_msg.header.seq = imuRawSeq;
+    pose_msg.header.frame_id = "odom";
+    pose_msg.pose.pose.orientation = tf2::toMsg(q);
+    pose_msg.pose.covariance = {1e-3,0,0,0,0,0,
+                               0,1e-3,0,0,0,0,
+                               0,0,1e-3,0,0,0,
+                               0,0,0,1e-3,0,0,
+                               0,0,0,0,1e-3,0,
+                               0,0,0,0,0,1e-4};
+    orient_pub.publish(pose_msg);
     
 }
 
@@ -236,6 +271,7 @@ int main(int argc, char** argv){
     imu_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu", 10);
     imu_fusion_pub = node.advertise<sensor_msgs::Imu>("/uwb/imu_fusion", 10);
     position_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/position", 10);
+    orient_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/pose",10);
     // pose_fusion_pub = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("/uwb/pose",10);
 
     lastTime = ros::Time::now();
