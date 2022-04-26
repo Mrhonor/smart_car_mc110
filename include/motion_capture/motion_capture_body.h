@@ -2,7 +2,7 @@
 #define __MOTION_CAPTURE_MAIN__
 
 #include "ros/ros.h"
-#include "gazebo_msgs/ModelStates.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/Imu.h"
 
 
@@ -22,7 +22,7 @@ public:
     ~motion_capture_body();
 
 private:
-    void motion_captureCallback(const gazebo_msgs::ModelStates::ConstPtr& msg);
+    void motion_captureCallback(const geometry_msgs::PoseStampedConstPtr& msg);
 
     // only use when simulate
     void imu_dataCallback(const sensor_msgs::Imu::ConstPtr& msg);

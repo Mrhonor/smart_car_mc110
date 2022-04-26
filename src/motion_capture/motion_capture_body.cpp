@@ -2,7 +2,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 
 motion_capture_body::motion_capture_body(ros::NodeHandle &n):seq(0){
-    motion_sub = n.subscribe("/gazebo/model_states", 10, &motion_capture_body::motion_captureCallback, this);
+    motion_sub = n.subscribe("/vrpn_client_node/mc110_4/pose", 10, &motion_capture_body::motion_captureCallback, this);
     ekf_vo_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/smart_car_mc110/vo", 10);
 
     // only use when simulate
@@ -14,13 +14,17 @@ motion_capture_body::~motion_capture_body(){
 
 }
 
-void motion_capture_body::motion_captureCallback(const gazebo_msgs::ModelStates::ConstPtr& msg){
+void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampedConstPtr& msg){
+    if(msg->pose.position.x > 9990000) return;
     geometry_msgs::PoseWithCovarianceStamped pub_msg;
     seq++;
     pub_msg.header.seq = seq;
     pub_msg.header.stamp = ros::Time::now();
     pub_msg.header.frame_id = "odom";
-    pub_msg.pose.pose = msg->pose[1];
+    pub_msg.pose.pose.position.x = msg->pose.position.x / 1000.0;
+    pub_msg.pose.pose.position.y = msg->pose.position.y / 1000.0;
+    pub_msg.pose.pose.position.z = msg->pose.position.z / 1000.0;
+    pub_msg.pose.pose.orientation = msg->pose.orientation;
     pub_msg.pose.covariance = {1e-4, 0, 0, 0, 0, 0,
                                0, 1e-4, 0, 0, 0, 0,
                                0, 0, 1e-4, 0, 0, 0,
