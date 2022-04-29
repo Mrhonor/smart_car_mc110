@@ -83,6 +83,8 @@ void smart_car_controller::controllerThreadHandle(){
     ros::Duration(1).sleep();
 
     trackPublish(trackPath1);
+    trackPublish(trackPath1);
+    ros::Duration(1).sleep();
     ros::Time staTime = ros::Time::now();
 
     while (ros::ok())
@@ -105,24 +107,27 @@ void smart_car_controller::controllerThreadHandle(){
         // else                  ControlState.TargetVelocity = 0;
 
         if(trackMode == "eight"){
-            if(curMode == "path1" && x0.X > 3.5){
+            if(curMode == "path1" && x0.X > -0.1){
                 curMode = "path2_s";
                 trackPublish(trackPath2);
             }
-            else if(curMode == "path2_s" && x0.X > 5.5){
+            else if(curMode == "path2_s" && x0.X > 3){
                 curMode = "path2";
             }
-            else if(curMode == "path2" && x0.X < 4.5){
+            else if(curMode == "path2" && x0.X < 0.1){
                 curMode = "path1_s";
                 trackPublish(trackPath1);
             }
-            else if(curMode == "path1_s" && x0.X < 2){
+            else if(curMode == "path1_s" && x0.X < -3){
                 curMode = "path1";
             }
         }
         
         ControlState.TargetAngle = -u0.dDelta * 180 / 3.14159;  
-        ControlState.TargetVelocity = 0.5;
+        if(ControlState.TargetAngle > 30) ControlState.TargetAngle = 30;
+        else if(ControlState.TargetAngle < -30) ControlState.TargetAngle = -30;
+
+        ControlState.TargetVelocity = 0.5 - fabs(ControlState.TargetAngle) * 0.01 ;
         
         if(trackMode == "debug" && (curTime.toSec() - staTime.toSec())>3){
             ControlState.TargetVelocity = 0;
