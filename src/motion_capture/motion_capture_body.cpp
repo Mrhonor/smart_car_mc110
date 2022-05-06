@@ -1,5 +1,8 @@
 #include "motion_capture_body.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 motion_capture_body::motion_capture_body(ros::NodeHandle &n):seq(0){
     motion_sub = n.subscribe("/vrpn_client_node/mc110_4/pose", 10, &motion_capture_body::motion_captureCallback, this);
@@ -16,6 +19,15 @@ motion_capture_body::~motion_capture_body(){
 
 void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampedConstPtr& msg){
     if(msg->pose.position.x > 9990000) return;
+    tf2::Quaternion q(0, 0, msg->pose.orientation.z, msg->pose.orientation.w);
+    q.normalize();
+    double roll, pitch, yaw;
+    tf2::Matrix3x3 m(q);
+
+    m.getRPY(roll, pitch, yaw);//进行转换
+
+    ROS_INFO("yaw: %lf", yaw);
+
     geometry_msgs::PoseWithCovarianceStamped pub_msg;
     seq++;
     pub_msg.header.seq = seq;
@@ -24,7 +36,7 @@ void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampe
     pub_msg.pose.pose.position.x = msg->pose.position.x / 1000.0;
     pub_msg.pose.pose.position.y = msg->pose.position.y / 1000.0;
     pub_msg.pose.pose.position.z = msg->pose.position.z / 1000.0;
-    pub_msg.pose.pose.orientation = msg->pose.orientation;
+    pub_msg.pose.pose.orientation = tf2::toMsg(q);
     pub_msg.pose.covariance = {1e-4, 0, 0, 0, 0, 0,
                                0, 1e-4, 0, 0, 0, 0,
                                0, 0, 1e-4, 0, 0, 0,
