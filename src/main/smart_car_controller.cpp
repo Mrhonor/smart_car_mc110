@@ -99,7 +99,7 @@ void smart_car_controller::controllerThreadHandle(){
         ros::Time curTime = ros::Time::now();
         double dt = (curTime.toSec() - LastTxTime.toSec());
         // x0.D += u0.dD * dt;
-        x0.delta += u0.dDelta * dt;
+        x0.delta = u0.dDelta;
         x0.vs += u0.dVs * dt;
 
         // if(x0.D > 0.05)       ControlState.TargetVelocity = x0.D * 0.75 + 0.25;
