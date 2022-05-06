@@ -3,7 +3,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
+#define pi 3.14159
 motion_capture_body::motion_capture_body(ros::NodeHandle &n):seq(0){
     motion_sub = n.subscribe("/vrpn_client_node/mc110_2/pose", 10, &motion_capture_body::motion_captureCallback, this);
     ekf_vo_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/smart_car_mc110/vo", 10);
