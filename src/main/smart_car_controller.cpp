@@ -93,7 +93,7 @@ void smart_car_controller::controllerThreadHandle(){
         
         if(comUart->uartRxHandle(data)){
             ros::Time timeStamp = ros::Time::now();
-            double transT = timeStamp.toSec() - data->PWM_Signal;
+            double transT = timeStamp.toSec() - data.PWM_Signal;
             SensorInfoPublish(data, timeStamp);
         }
         
