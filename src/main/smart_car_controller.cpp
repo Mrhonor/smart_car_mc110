@@ -71,6 +71,7 @@ smart_car_controller::smart_car_controller(ros::NodeHandle &n):
 smart_car_controller::~smart_car_controller(){
     ros::Duration(0.2).sleep();
     ControlState.TargetVelocity = 0;
+    ControlState.TargetAngle = 0;
     comUart->uartTxHandle(ControlState);
     ros::Duration(1).sleep();
     delete comUart;
@@ -92,6 +93,7 @@ void smart_car_controller::controllerThreadHandle(){
         
         if(comUart->uartRxHandle(data)){
             ros::Time timeStamp = ros::Time::now();
+            double transT = timeStamp.toSec() - data->PWM_Signal;
             SensorInfoPublish(data, timeStamp);
         }
         
@@ -128,7 +130,7 @@ void smart_car_controller::controllerThreadHandle(){
         else if(ControlState.TargetAngle < -30) ControlState.TargetAngle = -30;
 
         ControlState.TargetVelocity = 0.5 - fabs(ControlState.TargetAngle) * 0.01 ;
-        
+        ControlState.YawVel = ros::Time::now().toSec() - staTime.toSec();
         if(trackMode == "debug" && (curTime.toSec() - staTime.toSec())>3){
             ControlState.TargetVelocity = 0;
             ROS_WARN("Debug!Stop!");

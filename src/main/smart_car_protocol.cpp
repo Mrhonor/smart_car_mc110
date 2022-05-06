@@ -212,6 +212,7 @@ int  smart_car_protocol::frameDataProc(uint8* buff,int len)
 	int i;
 	
 	m_RecvData.CarSpeed = IMU_Trans(pCurr[2], pCurr[3]); // 里程计数据
+	m_RecvData.PWM_Signal = Odom_Trans(pCurr[4], pCurr[5])
 	m_RecvData.Gyro[3] = IMU_Trans(pCurr[8], pCurr[9]);
 	m_RecvData.Gyro[4] = IMU_Trans(pCurr[10], pCurr[11]);
 	m_RecvData.Gyro[5] = IMU_Trans(pCurr[12], pCurr[13]);

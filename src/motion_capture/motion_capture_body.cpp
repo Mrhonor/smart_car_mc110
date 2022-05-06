@@ -5,7 +5,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 motion_capture_body::motion_capture_body(ros::NodeHandle &n):seq(0){
-    motion_sub = n.subscribe("/vrpn_client_node/mc110_4/pose", 10, &motion_capture_body::motion_captureCallback, this);
+    motion_sub = n.subscribe("/vrpn_client_node/mc110_2/pose", 10, &motion_capture_body::motion_captureCallback, this);
     ekf_vo_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/smart_car_mc110/vo", 10);
 
     // only use when simulate
