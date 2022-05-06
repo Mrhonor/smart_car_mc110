@@ -25,8 +25,15 @@ void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampe
     tf2::Matrix3x3 m(q);
 
     m.getRPY(roll, pitch, yaw);//进行转换
+    yaw -= (3.7 * pi / 180);
+    while(yaw > pi) yaw -= 2*pi;
+    while(yaw < -pi) yaw += 2*pi;
 
-    ROS_INFO("yaw: %lf", yaw);
+    // ROS_INFO("yaw : %lf", yaw*180/pi);
+
+    q.setRPY(roll,pitch,yaw); 
+
+    // ROS_INFO("yaw: %lf", yaw);
 
     geometry_msgs::PoseWithCovarianceStamped pub_msg;
     seq++;
