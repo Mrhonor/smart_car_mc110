@@ -10,7 +10,7 @@
 
   </node>
 
-  <node pkg="smart_car_mc110" type="smart_car_uwb" name="uwb" output="screen">
+  <node pkg="smart_car_mc110" type="smart_car_uwb" name="uwb">
     <param name = "YawError" type = "double" value = "0" />
   </node>
 </launch>

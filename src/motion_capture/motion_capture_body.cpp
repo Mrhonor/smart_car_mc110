@@ -18,7 +18,10 @@ motion_capture_body::~motion_capture_body(){
 }
 
 void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampedConstPtr& msg){
+    // 出错数据丢弃
     if(msg->pose.position.x > 9990000) return;
+
+    
     tf2::Quaternion q(0, 0, msg->pose.orientation.z, msg->pose.orientation.w);
     q.normalize();
     double roll, pitch, yaw;
