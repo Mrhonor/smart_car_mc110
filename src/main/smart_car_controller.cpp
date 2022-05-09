@@ -130,7 +130,7 @@ void smart_car_controller::controllerThreadHandle(){
         else if(ControlState.TargetAngle < -30) ControlState.TargetAngle = -30;
 
         ControlState.TargetVelocity = 0.5 - fabs(ControlState.TargetAngle) * 0.01 ;
-        ControlState.YawVel = ros::Time::now().toSec() - staTime.toSec();
+        
         if(trackMode == "debug" && (curTime.toSec() - staTime.toSec())>3){
             ControlState.TargetVelocity = 0;
             ROS_WARN("Debug!Stop!");
@@ -140,7 +140,7 @@ void smart_car_controller::controllerThreadHandle(){
             
         LastTxTime = curTime;
 
-        ros::Duration(0.01).sleep();
+        ros::Duration(0.04).sleep();
     }
     // ros::Duration(1).sleep();
     // trackPublish();

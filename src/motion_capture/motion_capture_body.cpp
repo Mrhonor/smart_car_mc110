@@ -25,6 +25,7 @@ void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampe
     tf2::Matrix3x3 m(q);
 
     m.getRPY(roll, pitch, yaw);//进行转换
+    // 修正motion capture的角度定位误差
     yaw -= (3.7 * pi / 180);
     while(yaw > pi) yaw -= 2*pi;
     while(yaw < -pi) yaw += 2*pi;
@@ -47,9 +48,9 @@ void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampe
     pub_msg.pose.covariance = {1e-4, 0, 0, 0, 0, 0,
                                0, 1e-4, 0, 0, 0, 0,
                                0, 0, 1e-4, 0, 0, 0,
-                               0, 0, 0, 1e-3, 0, 0,
-                               0, 0, 0, 0, 1e-3, 0,
-                               0, 0, 0, 0, 0, 1e-3
+                               0, 0, 0, 1e-4, 0, 0,
+                               0, 0, 0, 0, 1e-4, 0,
+                               0, 0, 0, 0, 0, 1e-4
     };
     ekf_vo_pub.publish(pub_msg);
 }
@@ -57,12 +58,12 @@ void motion_capture_body::motion_captureCallback(const geometry_msgs::PoseStampe
 void motion_capture_body::imu_dataCallback(const sensor_msgs::Imu::ConstPtr& msg){
     sensor_msgs::Imu pub_msg;
     pub_msg = *msg;
-    pub_msg.angular_velocity.z += 0.1;
+    
     //pub_msg.orientation.w += 0.1; 
     if(pub_msg.orientation.w > 1) pub_msg.orientation.w = 1;
     pub_msg.orientation_covariance = {1, 0, 0,
                                       0, 1, 0,
-                                      0, 0, 10
+                                      0, 0, 1e-3
 
     };
     pub_msg.angular_velocity_covariance = {1, 0, 0,

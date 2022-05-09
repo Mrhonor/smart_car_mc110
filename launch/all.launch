@@ -6,4 +6,11 @@
     <param name = "trackPath2" type = "string" value = "$(find smart_car_mc110)/track_eight2.json" />
   </node>
 
+  <node pkg="smart_car_mc110" type="smart_car_motion_capture" name="motion_capture">
+
+  </node>
+
+  <node pkg="smart_car_mc110" type="smart_car_uwb" name="uwb" output="screen">
+    <param name = "YawError" type = "double" value = "0" />
+  </node>
 </launch>
