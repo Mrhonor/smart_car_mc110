@@ -1,0 +1,6 @@
+<launch>
+    
+  <node pkg="smart_car_mc110" type="smart_car_motion_capture" name="motion_capture" output="screen">
+
+  </node>
+</launch>

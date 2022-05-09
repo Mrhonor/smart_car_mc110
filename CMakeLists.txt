@@ -10,13 +10,35 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
   nav_msgs
   cv_bridge
+  tf2
+  tf2_ros
   image_transport
   message_generation
 )
 
+add_message_files(
+  DIRECTORY msg
+  FILES
+  hedge_pos.msg
+  hedge_pos_a.msg
+  hedge_pos_ang.msg
+  beacon_pos_a.msg
+  hedge_imu_raw.msg
+  hedge_imu_fusion.msg
+  beacon_distance.msg
+  hedge_telemetry.msg
+  hedge_quality.msg
+  marvelmind_waypoint.msg
+)
+
+generate_messages(
+   DEPENDENCIES
+  std_msgs
+)
+
 find_package(OpenCV REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
 catkin_package(
   INCLUDE_DIRS
@@ -33,6 +55,8 @@ include_directories(
   include/main
   include/single_eye
   include/motion_capture
+  External/Eigen
+  External/Json/include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -45,10 +69,17 @@ add_executable(smart_car_main
     src/main/smart_car_main.cpp
     src/main/smart_car_protocol.cpp
     src/main/smart_car_uart.cpp
+    src/main/integrator.cpp
+    src/main/model.cpp
+    src/main/types.cpp
+    src/main/params.cpp
 )
 add_dependencies(smart_car_main ${${PROJECT_NAME}_EXPORTTED_TARGETS}
                                    ${catkin_EXPORTED_TARGETS}
                                    )
+# find_package(Python COMPONENTS Development)
+# target_include_directories(smart_car_main PRIVATE ${Python_INCLUDE_DIRS} ${catkin_LIBRARIES})
+# target_link_libraries(smart_car_main ${Python_LIBRARIES} ${catkin_LIBRARIES})
 
 target_link_libraries(smart_car_main 
     ${catkin_LIBRARIES}
@@ -79,4 +110,26 @@ target_link_libraries(smart_car_motion_capture
     ${catkin_LIBRARIES}
 )
 
+add_executable(smart_car_tf
+    src/open_vins_tf/tf_main.cpp
+)
+add_dependencies(smart_car_tf ${${PROJECT_NAME}_EXPORTTED_TARGETS}
+                                   ${catkin_EXPORTED_TARGETS}
+                                   )
+
+target_link_libraries(smart_car_tf 
+    ${catkin_LIBRARIES}
+)
+
+add_executable(smart_car_uwb
+    src/uwb/uwb_main.cpp
+)
+add_dependencies(smart_car_uwb ${${PROJECT_NAME}_EXPORTTED_TARGETS}
+                                   ${catkin_EXPORTED_TARGETS}
+                                   smart_car_mc110_generate_messages_cpp
+                                   )
+
+target_link_libraries(smart_car_uwb 
+    ${catkin_LIBRARIES}
+)
 

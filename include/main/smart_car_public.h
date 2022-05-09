@@ -47,7 +47,7 @@ typedef float               float32;// 32 bits floating point
 #define RFIDANGLE                   100
 #define REALSENSEDIS                0
 
-#define PROTOCOL_TX_LEN   			64
+#define PROTOCOL_TX_LEN   			73
 
 #define TRUE   1
 #define FALSE  0
@@ -67,8 +67,8 @@ typedef float               float32;// 32 bits floating point
 #define HIWORD(l)   ((uint16)(((uint32)(l) >> 16) & 0xFFFF))
 #define LOWORD(l)   ((uint16)(l))
 
-#define MPU9250_ANGLEVEL_RANGE 250 // MPU9250测量角速度范围±250
-#define MPU9250_ACC_RANGE	   2*9.8 // MPU9250测量加速度范围±2g
+#define MPU9250_ANGLEVEL_RANGE 2000 // MPU9250测量角速度范围±250
+#define MPU9250_ACC_RANGE	   16*9.8 // MPU9250测量加速度范围±2g
 #define MPU9250_MAG_RANGE      4800  // MPU9250测量磁场强度范围±4800μT
 #define PI 					   3.14159265
 
@@ -174,6 +174,7 @@ typedef float               float32;// 32 bits floating point
 	
 // }SCommandDataStru;
 
+
 typedef struct _tagCommandData
 {
 	float32 TimeStamp; // 时间戳
@@ -200,7 +201,7 @@ typedef struct _tagCommandData
 	float32 ZAcc;
 
 	// control command
-	float32 TargetVelocity; //目标速度
+	float32 TargetVelocity; //目标油门
 	float32 TargetAngle; //目标角度
 	
 	uint8 ControlMode; //控制模式
@@ -224,6 +225,56 @@ typedef struct _tagCommandData
 	}
 	
 }SCommandDataStru;
+
+
+
+// // 旧版数据结构
+// typedef struct _tagRealData
+// {
+// 	int16 SteerAngle;
+// 	int16 PWM_Signal;
+// 	int16 CarSpeed;
+// 	int8 AGVPos[2];
+// 	uint16 InfraRedFront;       //InfraRed1
+// 	uint16 InFraRedLeftFront;   //InfraRed2
+// 	uint16 InFraRedLeftBack;    //InfraRed3
+// 	uint16 InFraRedRightFront;  //InfraRed4
+// 	uint16 InFraRedRightBack;   //InfraRed5
+// 	uint16 InFraRedBack;        //InfraRed6
+// 	uint16 Energy;
+// 	uint32 FRIDCardNo;
+// 	int16 Gyro[9];
+// 	uint8 ErrorCode;
+	
+// 	_tagRealData()
+// 	{
+// 		Init();
+// 	}
+	
+// 	void Init()
+// 	{
+// 		memset(this,0,sizeof(_tagRealData));
+// 	}
+// 	void operator =(_tagRealData data)
+// 	{
+// 		Init();
+// 		SteerAngle = data.SteerAngle;
+// 		PWM_Signal = data.PWM_Signal;
+// 		CarSpeed = data.CarSpeed;
+// 		memcpy(AGVPos,data.AGVPos,sizeof(int8)*2);
+// 		InfraRedFront      = data.InfraRedFront;
+// 		InFraRedLeftFront  = data.InFraRedLeftFront;
+// 		InFraRedLeftBack   = data.InFraRedLeftBack;
+// 		InFraRedRightFront = data.InFraRedRightFront;
+// 		InFraRedRightBack  = data.InFraRedRightBack;
+// 		InFraRedBack       = data.InFraRedBack;
+// 		Energy = data.Energy;
+// 		FRIDCardNo = data.FRIDCardNo;
+// 		memcpy(Gyro,data.Gyro,sizeof(int16)*9);
+// 		ErrorCode = data.ErrorCode;
+// 	}
+	
+// }SRealDataStru;
 
 typedef struct _tagRealData
 {

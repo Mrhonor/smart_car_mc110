@@ -1,36 +1,40 @@
 # 智能小车RK3399端ROS节点
 ## 项目说明
 1. 该项目实现千乘智能小车MC110的RK3399端代码ROS化
-2. 实现单目摄像头（小车读取摄像头测试通过）、realsense（未实现）、激光雷达（未实现）和uart通信（测试通过）ROS节点化
-3. 去除原有的WIFI通信控制功能
-4. 预计用roslaunch打包运行所有节点
-5. 实现motion capture输出至ekf输入节点，目前用gazebo仿真数据。
-
+2. 主分支实现接入uwb数据和motion capture数据
+3. 主分支控制算法使用纯跟踪算法
+4. 整体流程为接收传感器数据，使用[robot localization](http://docs.ros.org/en/noetic/api/robot_localization/html/index.html)库对位姿进行估计。根据估计位姿使用[纯跟踪算法](https://github.com/Mrhonor/Pure_Pursuit)求解控制向量，通过串口通信下发至STM32控制车辆运动。
 
 ## 节点说明
-
 ### **smart_car_main** 
-1. 该节点实现小车控制和与STM32端串口通信功能
-2. 通过***/dev/ttyS4***与STM32端通信，目前已控制小车通信通过
-3. 打开方式
+1. 该节点实现小车控制和与STM32端串口通信功能，核心通信节点
+2. 运行方式
 ```
-rosrun smart_car_mc110 smart_car_main
+roslaunch smart_car_mc110 core.launch
 ```
+3. 状态向量通过 **/EKF/State**发布，控制向量接收自 **/MPCC/Control**
 
-### **smart_car_single_eye** 
-1. 该节点实现单目摄像头进行视觉检测车道线功能
-2. 读取摄像头测试通过，运行车道线检测结果通过
-3. 打开方式
+### **smart_car_uwb** 
+1. 该节点实现uwb传感器ROS消息的解包
+2. 运行方式
 ```
-rosrun smart_car_mc110 smart_car_single_eye
+roslaunch smart_car_mc110 uwb.launch
 ```
-3. 可以通过订阅 ***/smart_car_mc110/single_eye/img*** 获取摄像头的视频输入
-4. 可以通过订阅 ***/smart_car_mc110/single_eye/ctanSlop*** 获取计算出的曲率数据
 
 ### **smart_car_motion_capture** 
-1. 该节点实现motion_capture和robot_pose_ekf通信功能
-2. 目前处于gazebo仿真阶段
-3. 打开方式
+1. 该节点实现motion_capture数据的解包
+2. 打开方式
 ```
-rosrun smart_car_mc110 smart_car_motion_capture
+roslaunch smart_car_mc110 motion.launch
 ```
+
+### 可以通过all.launch一起运行上述三个节点
+```
+roslaunch smart_car_mc110 all.launch
+```
+
+## 启动说明
+1. 先启动传感器ROS节点
+2. 启动robot localization节点
+3. 启动纯跟踪算法节点
+4. 运行all.launch

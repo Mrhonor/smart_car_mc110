@@ -1,0 +1,16 @@
+<launch>
+  <node pkg="smart_car_mc110" type="smart_car_main" name="mc110_main" output="screen">
+    <param name = "configPath" type = "string" value = "$(find mpcc)/Params/config.json" />
+    <param name = "trackMode" type = "string" value = "eight" />
+    <param name = "trackPath1" type = "string" value = "$(find smart_car_mc110)/track_eight1.json" />
+    <param name = "trackPath2" type = "string" value = "$(find smart_car_mc110)/track_eight2.json" />
+  </node>
+
+  <node pkg="smart_car_mc110" type="smart_car_motion_capture" name="motion_capture">
+
+  </node>
+
+  <node pkg="smart_car_mc110" type="smart_car_uwb" name="uwb">
+    <param name = "YawError" type = "double" value = "0" />
+  </node>
+</launch>
