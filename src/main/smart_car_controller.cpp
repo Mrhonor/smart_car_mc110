@@ -129,7 +129,7 @@ void smart_car_controller::controllerThreadHandle(){
         if(ControlState.TargetAngle > 30) ControlState.TargetAngle = 30;
         else if(ControlState.TargetAngle < -30) ControlState.TargetAngle = -30;
 
-        ControlState.TargetVelocity = 0.5 - fabs(ControlState.TargetAngle) * 0.01 ;
+        ControlState.TargetVelocity = u0.dD; //0.5 - fabs(ControlState.TargetAngle) * 0.01 ;
         
         if(trackMode == "debug" && (curTime.toSec() - staTime.toSec())>3){
             ControlState.TargetVelocity = 0;
